@@ -26,12 +26,11 @@
         .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; }
         .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.9rem; }
         .sub-btn.on { background: #81c784; color: white; }
-        input[type="number"] { width: 100%; padding: 15px; font-size: 1.8rem; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-        .cam-btn { display: block; background: #607d8b; color: white; padding: 15px; text-align: center; border-radius: 12px; margin: 10px 0; cursor: pointer; }
+        input[type="number"], input[type="text"] { width: 100%; padding: 15px; font-size: 1.2rem; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        input[type="number"] { font-size: 1.8rem; }
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
         .hist-i { border-bottom: 2px solid #f0f0f0; padding: 15px 0; }
-        .receipt-img { width: 100%; border-radius: 10px; margin-top: 8px; border: 1px solid #eee; }
-        #preview { width: 100%; max-height: 150px; object-fit: contain; display: none; margin: 10px 0; border: 1px dashed #ccc; }
+        .memo-text { font-size: 0.85rem; color: #666; display: block; margin-top: 5px; background: #f0f4f0; padding: 5px; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -100,24 +99,21 @@
             <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
 
-        <p><b>② 金額を入れてね</b></p>
+        <p><b>② 備考（メモ）</b></p>
+        <input type="text" id="memoIn" placeholder="例：肉まとめ買い、お祝い">
+
+        <p><b>③ 金額を入れてね</b></p>
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥0">
-        
-        <label class="cam-btn">📷 レシートを撮る
-            <input type="file" accept="image/*" capture="camera" style="display:none" onchange="compressImg(this)">
-        </label>
-        <img id="preview">
         
         <button class="save-btn" onclick="doSave()">保存する</button>
         <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px; cursor:pointer;">× キャンセル</p>
     </div>
 </div>
-<canvas id="canvas" style="display:none;"></canvas>
 
 <script>
-    let db, data = [], viewD = new Date(), selD = '', selC = '', selSub = '', selImg = '';
+    let db, data = [], viewD = new Date(), selD = '', selSub = '';
 
-    const request = indexedDB.open("KakeiboFinalDB", 1);
+    const request = indexedDB.open("KakeiboMemoDB", 1);
     request.onupgradeneeded = e => { e.target.result.createObjectStore("records", { keyPath: "id", autoIncrement: true }); };
     request.onsuccess = e => { db = e.target.result; loadData(); };
 
@@ -153,8 +149,6 @@
         document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('on'));
         document.getElementById('sub-' + type).style.display = 'grid';
         btn.classList.add('on');
-        selC = btn.innerText;
-        selSub = '';
     }
 
     function setSub(btn, name) {
@@ -163,33 +157,12 @@
         selSub = name;
     }
 
-    function compressImg(input) {
-        if (!input.files || !input.files[0]) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.getElementById('canvas');
-                const MAX_W = 600;
-                let w = img.width, h = img.height;
-                if (w > MAX_W) { h *= MAX_W / w; w = MAX_W; }
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                selImg = canvas.toDataURL('image/jpeg', 0.6);
-                document.getElementById('preview').src = selImg;
-                document.getElementById('preview').style.display = 'block';
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-
     function doSave() {
         const a = document.getElementById('amtIn').value;
+        const m = document.getElementById('memoIn').value;
         if (!selSub || !a) return alert('お店の名前と金額を入れてね');
         const tx = db.transaction("records", "readwrite");
-        tx.objectStore("records").add({ d: selD, c: selSub, a: parseInt(a), img: selImg });
+        tx.objectStore("records").add({ d: selD, c: selSub, a: parseInt(a), m: m });
         tx.oncomplete = () => { loadData(); clsM(); };
     }
 
@@ -205,8 +178,8 @@
         document.getElementById('dayH').innerHTML = h.length ? h.map(e => `
             <div class="hist-i">
                 <b>${e.c} : ¥${e.a.toLocaleString()}</b>
-                <button onclick="del(${e.id})" style="float:right">消す</button>
-                ${e.img ? `<img src="${e.img}" class="receipt-img">` : ''}
+                ${e.m ? `<span class="memo-text">💬 ${e.m}</span>` : ''}
+                <button onclick="del(${e.id})" style="float:right; margin-top:-20px;">消す</button>
             </div>
         `).join('') : "<p style='color:#ccc;text-align:center;'>記録なし</p>";
     }
@@ -214,8 +187,9 @@
     function updateTotal() {
         const n = new Date();
         const mS = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
+        const yS = `${n.getFullYear()}`;
         const m = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + c.a, 0);
-        const y = data.filter(e => e.d.startsWith(String(n.getFullYear()))).reduce((a, c) => a + c.a, 0);
+        const y = data.filter(e => e.d.startsWith(yS)).reduce((a, c) => a + c.a, 0);
         document.getElementById('mSum').innerText = '¥' + m.toLocaleString();
         document.getElementById('ySum').innerText = '¥' + y.toLocaleString();
     }
@@ -224,10 +198,11 @@
     function opM(d) { selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/'); upHist(); document.getElementById('mdl').style.display = 'block'; }
     function clsM() { document.getElementById('mdl').style.display = 'none'; reset(); }
     function reset() { 
-        document.getElementById('amtIn').value = ''; selSub = ''; selImg = '';
+        document.getElementById('amtIn').value = ''; 
+        document.getElementById('memoIn').value = '';
+        selSub = '';
         document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
         document.querySelectorAll('.c-btn, .sub-btn').forEach(b => b.classList.remove('on'));
-        document.getElementById('preview').style.display = 'none';
     }
 </script>
 </body>
