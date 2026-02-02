@@ -3,119 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>爆速レシート家計簿</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+    <title>親孝行家計簿</title>
     <style>
-        :root { --main-bg: #f0f2f5; --card-bg: #ffffff; --primary: #007bff; --sunday: #fff0f0; --saturday: #f0f5ff; --today: #fff9c4; }
-        body { font-family: -apple-system, sans-serif; background: var(--main-bg); margin: 0; padding: 15px; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { margin-top: 0; font-size: 1.2rem; color: #333; border-left: 5px solid var(--primary); padding-left: 10px; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:active { opacity: 0.8; }
-        #preview { width: 100%; margin-top: 10px; border-radius: 8px; display: none; }
-        .loading { display: none; text-align: center; color: var(--primary); font-weight: bold; }
-        /* カレンダーの色分け */
-        .flatpickr-day.sunday { background-color: var(--sunday) !important; color: red !important; }
-        .flatpickr-day.saturday { background-color: var(--saturday) !important; color: blue !important; }
+        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; --sun-c: #ff5252; --sat-c: #448aff; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; font-size: 18px; color: #333; }
+        .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
+        .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
+        .summary b { display: block; font-size: 1.2rem; color: #2e7d32; }
+        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th { font-size: 0.8rem; color: #888; padding-bottom: 5px; }
+        /* 土日の色 */
+        th:first-child, .sun { color: var(--sun-c); }
+        th:last-child, .sat { color: var(--sat-c); }
+        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; position: relative; }
+        .day-n { font-weight: bold; font-size: 0.9rem; }
+        .day-amt { font-size: 0.7rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
+        .today { background-color: #fff9c4; border: 2px solid #fbc02d; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
+        .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
+        .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .c-btn { padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 1rem; cursor: pointer; }
+        .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
+        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; }
+        .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.9rem; }
+        .sub-btn.on { background: #81c784; color: white; }
+        input[type="number"], input[type="text"] { width: 100%; padding: 15px; font-size: 1.2rem; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
+        .save-btn:disabled { background: #ccc; }
+        .hist-i { border-bottom: 2px solid #f0f0f0; padding: 15px 0; font-size: 0.9rem; }
+        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; border: 1px solid #ddd; }
+        .loading-text { display: none; text-align: center; color: var(--main-c); font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>収支入力</h2>
-    <input type="text" id="date" placeholder="日付を選択">
-    <select id="category">
-        <option value="食費">食費</option>
-        <option value="日用品">日用品</option>
-        <option value="交際費">交際費</option>
-        <option value="その他">その他</option>
-    </select>
-    <input type="text" id="memo" placeholder="備考（店名など）">
-    <input type="number" id="amount" placeholder="金額（円）" inputmode="numeric">
-    
-    <p style="font-size: 0.8rem; color: #666; margin-bottom: 5px;">レシートを撮影（任意）</p>
-    <input type="file" id="file" accept="image/*" capture="environment">
-    <img id="preview">
-    
-    <button id="sendBtn" onclick="sendData()">スプシに保存する</button>
-    <div id="loading" class="loading">送信中... ☕</div>
+<div class="summary">
+    <div>今月合計<b id="mSum">¥0</b></div>
+    <div>今年合計<b id="ySum">¥0</b></div>
 </div>
 
-<script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby7Mv-vK3_rX_lWj6i_Lg2-B6H0z6R-5z7_O9Z5v-pQ/exec"; // ※自動生成済み
-    const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
+<div class="cal-box">
+    <div class="cal-head">
+        <button onclick="moveM(-1)">◀ 前月</button>
+        <b id="calT"></b>
+        <button onclick="moveM(1)">次月 ▶</button>
+    </div>
+    <table>
+        <thead><tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr></thead>
+        <tbody id="calB"></tbody>
+    </table>
+</div>
 
-    // カレンダー設定
-    flatpickr("#date", {
-        locale: "ja",
-        defaultDate: "today",
-        dateFormat: "Y-m-d",
-        onDayCreate: function(dObj, dStr, fp, dayElem) {
-            if (dayElem.dateObj.getDay() === 0) dayElem.classList.add("sunday");
-            if (dayElem.dateObj.getDay() === 6) dayElem.classList.add("saturday");
-        }
-    });
+<div id="mdl" class="modal">
+    <div class="modal-con">
+        <h2 id="mdlD" style="text-align:center; margin-bottom:15px;">日付</h2>
+        <div id="dayH"></div>
+        <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+        
+        <p><b>① お店を選んでね</b></p>
+        <div class="btn-g">
+            <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
+            <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
+            <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグストア</button>
+            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食店</button>
+        </div>
 
-    // 画像プレビュー処理（圧縮付き）
-    let base64Data = "";
-    document.getElementById('file').addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // 節約のためリサイズ
-                let width = img.width;
-                let height = img.height;
-                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                canvas.width = width; canvas.height = height;
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                base64Data = canvas.toDataURL('image/jpeg', 0.7);
-                document.getElementById('preview').src = base64Data;
-                document.getElementById('preview').style.display = 'block';
-            };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // 送信処理
-    async function sendData() {
-        const btn = document.getElementById('sendBtn');
-        const loader = document.getElementById('loading');
-        const data = {
-            d: document.getElementById('date').value,
-            c: document.getElementById('category').value,
-            m: document.getElementById('memo').value,
-            a: document.getElementById('amount').value,
-            imgData: base64Data,
-            folderId: FOLDER_ID
-        };
-
-        if (!data.a) return alert("金額を入れてね！");
-
-        btn.disabled = true;
-        loader.style.display = 'block';
-
-        try {
-            await fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify(data)
-            });
-            alert("保存しました！");
-            location.reload(); // 入力欄をリセット
-        } catch (e) {
-            alert("エラー！もう一度試してね");
-        } finally {
-            btn.disabled = false;
-            loader.style.display = 'none';
-        }
-    }
-</script>
-</body>
-</html>
+        <div id="sub-super" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
+            <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業務スーパー</button>
+            <button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー系列</button>
+            <button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button>
+            <button class="sub-btn" onclick="setSub(this,'アオキ')">アオキ</button>
+            <button class="
