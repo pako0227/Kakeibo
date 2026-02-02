@@ -10,31 +10,27 @@
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
         .summary b { display: block; font-size: 1.2rem; color: #2e7d32; }
-        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 300px; }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th { font-size: 0.8rem; color: #888; padding-bottom: 5px; }
-        /* 土日の色 */
-        th:first-child, .sun { color: var(--sun-c); }
-        th:last-child, .sat { color: var(--sat-c); }
-        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; position: relative; }
+        th:first-child, .sun { color: var(--sun-c) !important; }
+        th:last-child, .sat { color: var(--sat-c) !important; }
+        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; }
         .day-n { font-weight: bold; font-size: 0.9rem; }
         .day-amt { font-size: 0.7rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
         .today { background-color: #fff9c4; border: 2px solid #fbc02d; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
-        .c-btn { padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 1rem; cursor: pointer; }
-        .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
-        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; }
+        .c-btn { padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 1rem; }
+        .c-btn.on { background: var(--main-c); color: white; }
+        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; }
         .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.9rem; }
         .sub-btn.on { background: #81c784; color: white; }
-        input[type="number"], input[type="text"] { width: 100%; padding: 15px; font-size: 1.2rem; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        input[type="number"], input[type="text"] { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
-        .save-btn:disabled { background: #ccc; }
-        .hist-i { border-bottom: 2px solid #f0f0f0; padding: 15px 0; font-size: 0.9rem; }
-        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; border: 1px solid #ddd; }
-        .loading-text { display: none; text-align: center; color: var(--main-c); font-weight: bold; margin-top: 10px; }
+        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -58,22 +54,148 @@
 
 <div id="mdl" class="modal">
     <div class="modal-con">
-        <h2 id="mdlD" style="text-align:center; margin-bottom:15px;">日付</h2>
+        <h2 id="mdlD" style="text-align:center;">日付</h2>
         <div id="dayH"></div>
-        <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
-        
-        <p><b>① お店を選んでね</b></p>
+        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+        <p><b>① お店</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
             <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
-            <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグストア</button>
-            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食店</button>
+            <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグ</button>
+            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食</button>
         </div>
-
         <div id="sub-super" class="sub-g">
             <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
             <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業務スーパー</button>
             <button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー系列</button>
             <button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button>
             <button class="sub-btn" onclick="setSub(this,'アオキ')">アオキ</button>
-            <button class="
+            <button class="sub-btn" onclick="setSub(this,'万代')">万代</button>
+            <button class="sub-btn" onclick="setSub(this,'アローズ')">アローズ</button>
+            <button class="sub-btn" onclick="setSub(this,'松源')">松源</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        </div>
+        <div id="sub-hosp" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'橋間診療所')">橋間診療所</button>
+            <button class="sub-btn" onclick="setSub(this,'やぎ医院')">やぎ医院</button>
+            <button class="sub-btn" onclick="setSub(this,'岩田歯科')">岩田歯科</button>
+            <button class="sub-btn" onclick="setSub(this,'暁明館')">暁明館</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        </div>
+        <div id="sub-drug" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ薬局</button>
+            <button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button>
+            <button class="sub-btn" onclick="setSub(this,'ココカラファイン')">ココカラ</button>
+            <button class="sub-btn" onclick="setSub(this,'キリン堂')">キリン堂</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        </div>
+        <div id="sub-eat" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button>
+            <button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚寿司</button>
+            <button class="sub-btn" onclick="setSub(this,'しゃぶ葉')">しゃぶ葉</button>
+            <button class="sub-btn" onclick="setSub(this,'ワールドビュッフェ')">Wビュッフェ</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        </div>
+        <p><b>② メモ / ③ 金額</b></p>
+        <input type="text" id="memoIn" placeholder="メモ">
+        <input type="number" id="amtIn" inputmode="numeric" placeholder="￥0" style="margin-top:10px;">
+        <p><b>④ レシート（任意）</b></p>
+        <input type="file" id="file" accept="image/*" capture="environment">
+        <img id="preview">
+        <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
+        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× 閉じる</p>
+    </div>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby7Mv-vK3_rX_lWj6i_Lg2-B6H0z6R-5z7_O9Z5v-pQ/exec";
+    const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
+    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
+
+    // 最初にカレンダーを出す
+    window.onload = () => { draw(); loadData(); };
+
+    async function loadData() {
+        try {
+            const res = await fetch(GAS_URL);
+            data = await res.json();
+            draw();
+        } catch (e) { console.log("通信待ち..."); }
+    }
+
+    function draw() {
+        const y = viewD.getFullYear(), m = viewD.getMonth();
+        document.getElementById('calT').innerText = `${y}年${m + 1}月`;
+        const start = new Date(y, m, 1).getDay(), end = new Date(y, m + 1, 0).getDate();
+        const todayStr = new Date().toISOString().split('T')[0];
+        let row = '<tr>';
+        for (let i = 0; i < start; i++) row += '<td></td>';
+        for (let d = 1; d <= end; d++) {
+            const dayOfWeek = (start + d - 1) % 7;
+            if (dayOfWeek === 0 && d !== 1) row += '</tr><tr>';
+            const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const sum = data.filter(e => e.d === ds).reduce((a, c) => a + Number(c.a), 0);
+            let cls = ds === todayStr ? 'today ' : '';
+            if(dayOfWeek === 0) cls += 'sun'; else if(dayOfWeek === 6) cls += 'sat';
+            row += `<td class="${cls}" onclick="opM('${ds}')"><span class="day-n">${d}</span>${sum > 0 ? `<span class="day-amt">¥${sum.toLocaleString()}</span>` : ''}</td>`;
+        }
+        document.getElementById('calB').innerHTML = row + '</tr>';
+        updateTotal();
+    }
+
+    // 画像圧縮処理
+    document.getElementById('file').onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = f => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const scale = 800 / img.width;
+                canvas.width = 800; canvas.height = img.height * scale;
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                base64Data = canvas.toDataURL('image/jpeg', 0.6);
+                const p = document.getElementById('preview'); p.src = base64Data; p.style.display = 'block';
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    async function doSave() {
+        const a = document.getElementById('amtIn').value;
+        const btn = document.getElementById('saveBtn');
+        if (!selSub || !a) return alert('お店と金額を入れてね');
+        btn.disabled = true; btn.innerText = "送信中...";
+        const payload = { d: selD, c: selSub, a: a, m: document.getElementById('memoIn').value, imgData: base64Data, folderId: FOLDER_ID };
+        try {
+            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+            data.push({ d: selD, c: selSub, a: a }); draw(); clsM();
+        } catch (e) { alert("エラー！"); } finally { btn.disabled = false; btn.innerText = "保存する"; }
+    }
+
+    function showSub(type, btn) {
+        document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
+        document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('on'));
+        document.getElementById('sub-' + type).style.display = 'grid'; btn.classList.add('on');
+    }
+    function setSub(btn, name) {
+        document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on'); selSub = name;
+    }
+    function upHist() {
+        const h = data.filter(e => e.d === selD);
+        document.getElementById('dayH').innerHTML = h.length ? h.map(e => `<div class="hist-i"><b>${e.c} : ¥${Number(e.a).toLocaleString()}</b></div>`).join('') : "記録なし";
+    }
+    function updateTotal() {
+        const n = new Date(), mS = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2, '0')}`;
+        const m = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + Number(c.a), 0);
+        document.getElementById('mSum').innerText = '¥' + m.toLocaleString();
+    }
+    function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
+    function opM(d) { selD = d; document.getElementById('mdlD').innerText = d; upHist(); document.getElementById('mdl').style.display = 'block'; }
+    function clsM() { document.getElementById('mdl').style.display = 'none'; reset(); }
+    function reset() { base64Data = ""; selSub = ''; document.getElementById('preview').style.display='none'; document.getElementById('amtIn').value=''; }
+</script>
+</body>
+</html>
