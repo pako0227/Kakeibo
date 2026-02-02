@@ -14,24 +14,30 @@
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th { font-size: 0.8rem; color: #888; padding-bottom: 5px; }
-        th:first-child, .sun { color: var(--sun-c) !important; }
-        th:last-child, .sat { color: var(--sat-c) !important; }
-        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; }
+        /* 曜日の色 */
+        th:nth-child(1) { color: var(--sun-c); } /* 日 */
+        th:nth-child(7) { color: var(--sat-c); } /* 土 */
+        td { height: 70px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; }
         .day-n { font-weight: bold; font-size: 0.9rem; }
+        /* 数字の色分け */
+        .sun .day-n, .hol .day-n { color: var(--sun-c); }
+        .sat .day-n { color: var(--sat-c); }
+        
         .day-amt { font-size: 0.7rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
-        .today { background-color: #fff9c4; border: 2px solid #fbc02d; }
+        .today { background-color: #fff9c4; border: 2px solid #fbc02d !important; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
-        .c-btn { padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 1rem; }
-        .c-btn.on { background: var(--main-c); color: white; }
-        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; }
+        .c-btn { padding: 15px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 1rem; cursor: pointer; }
+        .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
+        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; }
         .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.9rem; }
         .sub-btn.on { background: #81c784; color: white; }
-        input[type="number"], input[type="text"] { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1.2rem; }
-        .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
-        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; }
-        .loading-text { display: none; text-align: center; color: var(--main-c); font-weight: bold; margin-top: 10px; }
+        input[type="number"], input[type="text"] { width: 100%; padding: 15px; font-size: 1.2rem; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        input[type="number"] { font-size: 1.8rem; }
+        .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
+        .hist-i { border-bottom: 2px solid #f0f0f0; padding: 15px 0; }
+        .memo-text { font-size: 0.85rem; color: #666; display: block; margin-top: 5px; background: #f0f4f0; padding: 5px; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -55,16 +61,16 @@
 
 <div id="mdl" class="modal">
     <div class="modal-con">
-        <h2 id="mdlD" style="text-align:center;">日付</h2>
+        <h2 id="mdlD" style="text-align:center; margin-bottom:15px;">日付</h2>
         <div id="dayH"></div>
-        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+        <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
         
         <p><b>① お店を選んでね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
             <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
-            <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグ</button>
-            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食</button>
+            <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグストア</button>
+            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食店</button>
         </div>
 
         <div id="sub-super" class="sub-g">
@@ -100,106 +106,65 @@
             <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
 
-        <p><b>② 備考（メモ） / ③ 金額</b></p>
-        <input type="text" id="memoIn" placeholder="例：肉まとめ買い">
-        <input type="number" id="amtIn" inputmode="numeric" placeholder="￥0" style="margin-top:10px;">
+        <p><b>② 備考（メモ）</b></p>
+        <input type="text" id="memoIn" placeholder="例：肉まとめ買い、お祝い">
+
+        <p><b>③ 金額を入れてね</b></p>
+        <input type="number" id="amtIn" inputmode="numeric" placeholder="￥0">
         
-        <p><b>④ レシート（任意）</b></p>
-        <input type="file" id="file" accept="image/*" capture="environment">
-        <img id="preview">
-        
-        <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
-        <div id="loading" class="loading-text">保存中... お待ちください</div>
+        <button class="save-btn" onclick="doSave()">保存する</button>
         <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px; cursor:pointer;">× キャンセル</p>
     </div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby7Mv-vK3_rX_lWj6i_Lg2-B6H0z6R-5z7_O9Z5v-pQ/exec";
-    const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
-    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = null;
+    let db, data = [], viewD = new Date(), selD = '', selSub = '';
 
-    window.onload = () => { draw(); loadData(); };
+    // 日本の祝日データ(2026年)
+    const holidays = ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-07-20","2026-08-11","2026-09-21","2026-09-22","2026-09-23","2026-10-12","2026-11-03","2026-11-23"];
 
-    async function loadData() {
-        try {
-            const res = await fetch(GAS_URL);
-            data = await res.json();
-            draw();
-        } catch (e) { console.log("通信待ち..."); }
+    const request = indexedDB.open("KakeiboMemoDB", 1);
+    request.onupgradeneeded = e => { e.target.result.createObjectStore("records", { keyPath: "id", autoIncrement: true }); };
+    request.onsuccess = e => { db = e.target.result; loadData(); };
+
+    function loadData() {
+        const tx = db.transaction("records", "readonly");
+        const store = tx.objectStore("records");
+        const req = store.getAll();
+        req.onsuccess = () => { data = req.result; draw(); };
     }
 
     function draw() {
         const y = viewD.getFullYear(), m = viewD.getMonth();
         document.getElementById('calT').innerText = `${y}年${m + 1}月`;
         const start = new Date(y, m, 1).getDay(), end = new Date(y, m + 1, 0).getDate();
-        const todayStr = new Date().toISOString().split('T')[0];
+        
+        // 日本時間での今日の日付取得
+        const n = new Date();
+        const todayStr = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+        
         let row = '<tr>';
         for (let i = 0; i < start; i++) row += '<td></td>';
         for (let d = 1; d <= end; d++) {
-            const dayOfWeek = (start + d - 1) % 7;
-            if (dayOfWeek === 0 && d !== 1) row += '</tr><tr>';
+            const weekIdx = (start + d - 1) % 7;
+            if (weekIdx === 0 && d !== 1) row += '</tr><tr>';
+            
             const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const sum = data.filter(e => e.d === ds).reduce((a, c) => a + Number(c.a), 0);
+            const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
+            
+            // クラス判定（今日、日曜、土曜、祝日）
             let cls = ds === todayStr ? 'today ' : '';
-            if(dayOfWeek === 0) cls += 'sun'; else if(dayOfWeek === 6) cls += 'sat';
-            row += `<td class="${cls}" onclick="opM('${ds}')"><span class="day-n">${d}</span>${sum > 0 ? `<span class="day-amt">¥${sum.toLocaleString()}</span>` : ''}</td>`;
+            if (holidays.includes(ds)) cls += 'hol ';
+            if (weekIdx === 0) cls += 'sun ';
+            if (weekIdx === 6) cls += 'sat ';
+
+            row += `<td class="${cls}" onclick="opM('${ds}')">
+                <span class="day-n">${d}</span>
+                ${sum > 0 ? `<span class="day-amt">¥${sum.toLocaleString()}</span>` : ''}
+            </td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
         updateTotal();
-    }
-
-    // 画像処理（レシートなしでもOKにする）
-    document.getElementById('file').onchange = e => {
-        const file = e.target.files[0];
-        if(!file) { base64Data = null; return; }
-        const reader = new FileReader();
-        reader.onload = f => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const scale = 800 / img.width;
-                canvas.width = 800; canvas.height = img.height * scale;
-                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                base64Data = canvas.toDataURL('image/jpeg', 0.6);
-                const p = document.getElementById('preview'); p.src = base64Data; p.style.display = 'block';
-            };
-            img.src = f.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
-
-    async function doSave() {
-        const a = document.getElementById('amtIn').value;
-        const btn = document.getElementById('saveBtn');
-        const load = document.getElementById('loading');
-        if (!selSub || !a) return alert('お店と金額を入れてね');
-
-        btn.disabled = true;
-        load.style.display = 'block';
-
-        const payload = {
-            d: selD,
-            c: selSub,
-            a: a,
-            m: document.getElementById('memoIn').value,
-            imgData: base64Data, // nullの場合はGAS側で無視される
-            folderId: FOLDER_ID
-        };
-
-        try {
-            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-            if(res.ok) {
-                data.push({ d: selD, c: selSub, a: a });
-                draw();
-                clsM();
-            } else { alert("保存に失敗しました(GASエラー)"); }
-        } catch (e) {
-            alert("保存に失敗しました(通信エラー)");
-        } finally {
-            btn.disabled = false;
-            load.style.display = 'none';
-        }
     }
 
     function showSub(type, btn) {
@@ -215,16 +180,41 @@
         selSub = name;
     }
 
+    function doSave() {
+        const a = document.getElementById('amtIn').value;
+        const m = document.getElementById('memoIn').value;
+        if (!selSub || !a) return alert('お店の名前と金額を入れてね');
+        const tx = db.transaction("records", "readwrite");
+        tx.objectStore("records").add({ d: selD, c: selSub, a: parseInt(a), m: m });
+        tx.oncomplete = () => { loadData(); clsM(); };
+    }
+
+    function del(id) {
+        if (!confirm('消しますか？')) return;
+        const tx = db.transaction("records", "readwrite");
+        tx.objectStore("records").delete(id);
+        tx.oncomplete = () => { loadData(); upHist(); };
+    }
+
     function upHist() {
         const h = data.filter(e => e.d === selD);
-        document.getElementById('dayH').innerHTML = h.length ? h.map(e => `<div style="border-bottom:1px solid #eee; padding:10px 0;"><b>${e.c} : ¥${Number(e.a).toLocaleString()}</b></div>`).join('') : "記録なし";
+        document.getElementById('dayH').innerHTML = h.length ? h.map(e => `
+            <div class="hist-i">
+                <b>${e.c} : ¥${e.a.toLocaleString()}</b>
+                ${e.m ? `<span class="memo-text">💬 ${e.m}</span>` : ''}
+                <button onclick="del(${e.id})" style="float:right; margin-top:-20px;">消す</button>
+            </div>
+        `).join('') : "<p style='color:#ccc;text-align:center;'>記録なし</p>";
     }
 
     function updateTotal() {
         const n = new Date();
-        const mS = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2, '0')}`;
-        const m = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + Number(c.a), 0);
+        const mS = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
+        const yS = `${n.getFullYear()}`;
+        const m = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + c.a, 0);
+        const y = data.filter(e => e.d.startsWith(yS)).reduce((a, c) => a + c.a, 0);
         document.getElementById('mSum').innerText = '¥' + m.toLocaleString();
+        document.getElementById('ySum').innerText = '¥' + y.toLocaleString();
     }
 
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
@@ -233,9 +223,7 @@
     function reset() { 
         document.getElementById('amtIn').value = ''; 
         document.getElementById('memoIn').value = '';
-        document.getElementById('file').value = '';
-        document.getElementById('preview').style.display = 'none';
-        base64Data = null; selSub = '';
+        selSub = '';
         document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
         document.querySelectorAll('.c-btn, .sub-btn').forEach(b => b.classList.remove('on'));
     }
