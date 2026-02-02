@@ -10,7 +10,7 @@
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
         .summary b { display: block; font-size: 1.2rem; color: #2e7d32; }
-        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 300px; }
+        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th { font-size: 0.8rem; color: #888; padding-bottom: 5px; }
@@ -28,9 +28,10 @@
         .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; }
         .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.9rem; }
         .sub-btn.on { background: #81c784; color: white; }
-        input[type="number"], input[type="text"] { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        input[type="number"], input[type="text"] { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1.2rem; }
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 15px; }
         #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; }
+        .loading-text { display: none; text-align: center; color: var(--main-c); font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -57,13 +58,15 @@
         <h2 id="mdlD" style="text-align:center;">日付</h2>
         <div id="dayH"></div>
         <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-        <p><b>① お店</b></p>
+        
+        <p><b>① お店を選んでね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
             <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
             <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグ</button>
             <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食</button>
         </div>
+
         <div id="sub-super" class="sub-g">
             <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
             <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業務スーパー</button>
@@ -96,23 +99,26 @@
             <button class="sub-btn" onclick="setSub(this,'ワールドビュッフェ')">Wビュッフェ</button>
             <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
-        <p><b>② メモ / ③ 金額</b></p>
-        <input type="text" id="memoIn" placeholder="メモ">
+
+        <p><b>② 備考（メモ） / ③ 金額</b></p>
+        <input type="text" id="memoIn" placeholder="例：肉まとめ買い">
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥0" style="margin-top:10px;">
+        
         <p><b>④ レシート（任意）</b></p>
         <input type="file" id="file" accept="image/*" capture="environment">
         <img id="preview">
+        
         <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
-        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× 閉じる</p>
+        <div id="loading" class="loading-text">保存中... お待ちください</div>
+        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px; cursor:pointer;">× キャンセル</p>
     </div>
 </div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycby7Mv-vK3_rX_lWj6i_Lg2-B6H0z6R-5z7_O9Z5v-pQ/exec";
     const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
-    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
+    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = null;
 
-    // 最初にカレンダーを出す
     window.onload = () => { draw(); loadData(); };
 
     async function loadData() {
@@ -143,9 +149,10 @@
         updateTotal();
     }
 
-    // 画像圧縮処理
+    // 画像処理（レシートなしでもOKにする）
     document.getElementById('file').onchange = e => {
         const file = e.target.files[0];
+        if(!file) { base64Data = null; return; }
         const reader = new FileReader();
         reader.onload = f => {
             const img = new Image();
@@ -165,37 +172,73 @@
     async function doSave() {
         const a = document.getElementById('amtIn').value;
         const btn = document.getElementById('saveBtn');
+        const load = document.getElementById('loading');
         if (!selSub || !a) return alert('お店と金額を入れてね');
-        btn.disabled = true; btn.innerText = "送信中...";
-        const payload = { d: selD, c: selSub, a: a, m: document.getElementById('memoIn').value, imgData: base64Data, folderId: FOLDER_ID };
+
+        btn.disabled = true;
+        load.style.display = 'block';
+
+        const payload = {
+            d: selD,
+            c: selSub,
+            a: a,
+            m: document.getElementById('memoIn').value,
+            imgData: base64Data, // nullの場合はGAS側で無視される
+            folderId: FOLDER_ID
+        };
+
         try {
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-            data.push({ d: selD, c: selSub, a: a }); draw(); clsM();
-        } catch (e) { alert("エラー！"); } finally { btn.disabled = false; btn.innerText = "保存する"; }
+            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+            if(res.ok) {
+                data.push({ d: selD, c: selSub, a: a });
+                draw();
+                clsM();
+            } else { alert("保存に失敗しました(GASエラー)"); }
+        } catch (e) {
+            alert("保存に失敗しました(通信エラー)");
+        } finally {
+            btn.disabled = false;
+            load.style.display = 'none';
+        }
     }
 
     function showSub(type, btn) {
         document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
         document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('on'));
-        document.getElementById('sub-' + type).style.display = 'grid'; btn.classList.add('on');
+        document.getElementById('sub-' + type).style.display = 'grid';
+        btn.classList.add('on');
     }
+
     function setSub(btn, name) {
         document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('on'));
-        btn.classList.add('on'); selSub = name;
+        btn.classList.add('on');
+        selSub = name;
     }
+
     function upHist() {
         const h = data.filter(e => e.d === selD);
-        document.getElementById('dayH').innerHTML = h.length ? h.map(e => `<div class="hist-i"><b>${e.c} : ¥${Number(e.a).toLocaleString()}</b></div>`).join('') : "記録なし";
+        document.getElementById('dayH').innerHTML = h.length ? h.map(e => `<div style="border-bottom:1px solid #eee; padding:10px 0;"><b>${e.c} : ¥${Number(e.a).toLocaleString()}</b></div>`).join('') : "記録なし";
     }
+
     function updateTotal() {
-        const n = new Date(), mS = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2, '0')}`;
+        const n = new Date();
+        const mS = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2, '0')}`;
         const m = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + Number(c.a), 0);
         document.getElementById('mSum').innerText = '¥' + m.toLocaleString();
     }
+
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
-    function opM(d) { selD = d; document.getElementById('mdlD').innerText = d; upHist(); document.getElementById('mdl').style.display = 'block'; }
+    function opM(d) { selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/'); upHist(); document.getElementById('mdl').style.display = 'block'; }
     function clsM() { document.getElementById('mdl').style.display = 'none'; reset(); }
-    function reset() { base64Data = ""; selSub = ''; document.getElementById('preview').style.display='none'; document.getElementById('amtIn').value=''; }
+    function reset() { 
+        document.getElementById('amtIn').value = ''; 
+        document.getElementById('memoIn').value = '';
+        document.getElementById('file').value = '';
+        document.getElementById('preview').style.display = 'none';
+        base64Data = null; selSub = '';
+        document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
+        document.querySelectorAll('.c-btn, .sub-btn').forEach(b => b.classList.remove('on'));
+    }
 </script>
 </body>
 </html>
