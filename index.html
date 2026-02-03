@@ -34,13 +34,13 @@
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
         #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; border: 1px solid #eee; }
         #loadText { display:none; text-align:center; color:var(--main-c); font-weight:bold; margin-top:10px; }
-        .hist-item { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+        .hist-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; background: #fff; margin-bottom: 5px; border-radius: 8px; }
         .hist-left { flex: 1; }
-        .hist-shop { font-weight: bold; color: #333; display: block; }
+        .hist-shop { font-weight: bold; color: #333; display: block; font-size: 1rem; }
         .hist-memo { font-size: 0.8rem; color: #666; }
-        .hist-right { text-align: right; margin-left: 10px; }
+        .hist-right { text-align: right; margin-right: 10px; }
         .hist-amt { color: var(--accent-c); font-weight: bold; display: block; }
-        .del-btn { background: none; border: none; color: #ccc; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; }
+        .del-btn { background: #ffebee; border: none; color: #f44336; font-size: 1.2rem; padding: 8px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -65,7 +65,7 @@
 <div id="mdl" class="modal">
     <div class="modal-con">
         <h2 id="mdlD" style="text-align:center; margin-top:0;">日付</h2>
-        <div id="dayH" style="max-height:150px; overflow-y:auto; background:#f9f9f9; padding:8px; border-radius:12px; border: 1px solid #eee; margin-bottom:10px;"></div>
+        <div id="dayH" style="max-height:180px; overflow-y:auto; background:#f0f0f0; padding:10px; border-radius:15px; margin-bottom:15px;"></div>
         
         <p style="margin: 15px 0 5px;"><b>① お店を選んでね</b></p>
         <div class="btn-g">
@@ -119,6 +119,7 @@
                 let d = new Date(item.d);
                 d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
                 item.d = d.toISOString().split('T')[0];
+                item.a = Number(item.a); // 金額を確実に数字にする
                 return item;
             });
             draw();
@@ -138,7 +139,7 @@
             const weekIdx = (start + d - 1) % 7;
             if (weekIdx === 0 && d !== 1) row += '</tr><tr>';
             const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const sum = data.filter(e => e.d === ds).reduce((a, c) => a + Number(c.a), 0);
+            const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
             let cls = ds === todayStr ? 'today ' : '';
             if (weekIdx === 0) cls += 'sun ';
             if (weekIdx === 6) cls += 'sat ';
@@ -154,7 +155,7 @@
         if (!selSub || !a) return alert('お店と金額を入れてね');
         document.getElementById('saveBtn').disabled = true;
         document.getElementById('loadText').style.display = 'block';
-        const payload = { d: selD, c: selSub, a: a, m: memo, imgData: base64Data, folderId: FOLDER_ID };
+        const payload = { method: "save", d: selD, c: selSub, a: Number(a), m: memo, imgData: base64Data, folderId: FOLDER_ID };
         try {
             await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
             data.push({ d: selD, c: selSub, a: Number(a), m: memo });
@@ -165,16 +166,20 @@
 
     async function doDel(idx) {
         if(!confirm("この記録を消してもいい？")) return;
-        const target = data.filter(e => e.d === selD)[idx];
+        const dayItems = data.filter(e => e.d === selD);
+        const target = dayItems[idx];
         document.getElementById('loadText').style.display = 'block';
         const payload = { method: "delete", d: target.d, c: target.c, a: target.a, m: target.m };
         try {
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-            // ローカルデータから削除
-            const realIdx = data.findIndex(e => e.d === target.d && e.c === target.c && e.a === target.a && e.m === target.m);
-            if (realIdx > -1) data.splice(realIdx, 1);
-            draw(); upHist();
-        } catch (e) { alert("消せませんでした"); }
+            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+            const result = await res.json();
+            if(result.status === "success") {
+                // 全体データから削除
+                const realIdx = data.findIndex(e => e.d === target.d && e.c === target.c && e.a === target.a && e.m === target.m);
+                if (realIdx > -1) data.splice(realIdx, 1);
+                draw(); upHist();
+            } else { alert("消せませんでした: " + result.message); }
+        } catch (e) { alert("通信エラーで消せませんでした"); }
         finally { document.getElementById('loadText').style.display = 'none'; }
     }
 
@@ -189,17 +194,17 @@
                 <div class="hist-right">
                     <span class="hist-amt">¥${Number(e.a).toLocaleString()}</span>
                 </div>
-                <button class="del-btn" onclick="doDel(${i})">🗑️</button>
+                <button class="del-btn" onclick="event.stopPropagation(); doDel(${i})">🗑️</button>
             </div>
-        `).join('') || "記録なし";
+        `).join('') || '<div style="text-align:center; color:#888;">記録なし</div>';
     }
 
     function updateSum() {
         const y = viewD.getFullYear(), m = viewD.getMonth();
         const mS = `${y}-${String(m + 1).padStart(2, '0')}`;
-        const mSum = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + Number(c.a), 0);
+        const mSum = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + c.a, 0);
         document.getElementById('mSum').innerText = '¥' + mSum.toLocaleString();
-        const ySum = data.filter(e => e.d.startsWith(`${y}`)).reduce((a, c) => a + Number(c.a), 0);
+        const ySum = data.filter(e => e.d.startsWith(`${y}`)).reduce((a, c) => a + c.a, 0);
         document.getElementById('ySum').innerText = '¥' + ySum.toLocaleString();
     }
 
