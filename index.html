@@ -5,30 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>親孝行家計簿</title>
     <style>
-        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; --sun-c: #ff5252; --sat-c: #448aff; }
+        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; }
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; font-size: 18px; color: #333; }
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
         .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        /* 曜日のヘッダー色 */
-        th:nth-child(1) { color: var(--sun-c); }
-        th:nth-child(7) { color: var(--sat-c); }
         td { height: 65px; border: 1px solid #f0f0f0; text-align: center; vertical-align: top; padding: 5px; cursor: pointer; }
-        
-        /* 土日の日付の色 */
-        .sun { color: var(--sun-c); background-color: #fff5f5; }
-        .sat { color: var(--sat-c); background-color: #f5faff; }
-        .holiday { color: var(--sun-c); background-color: #fff5f5; }
-
         .day-n { font-weight: bold; font-size: 0.9rem; }
         .day-amt { font-size: 0.65rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
-        .del-btn { background: #ff5252; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; }
+        .del-btn { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
         .c-btn { padding: 12px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 0.9rem; }
         .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
@@ -36,14 +26,16 @@
         .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.85rem; }
         .sub-btn.on { background: #81c784; color: white; }
         input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
+        .cam-btn { width: 100%; padding: 12px; background: #666; color: white; border: none; border-radius: 10px; margin: 10px 0; }
+        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; }
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="summary">
-    <div>今月<b id="mSum">¥0</b></div>
-    <div>今年<b id="ySum">¥0</b></div>
+    <div>今月合計<b id="mSum">¥0</b></div>
+    <div>今年合計<b id="ySum">¥0</b></div>
 </div>
 
 <div class="cal-box">
@@ -52,12 +44,7 @@
         <b id="calT">読込中...</b>
         <button onclick="moveM(1)">次月 ▶</button>
     </div>
-    <table>
-        <thead>
-            <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
-        </thead>
-        <tbody id="calB"></tbody>
-    </table>
+    <table><tbody id="calB"></tbody></table>
 </div>
 
 <div id="mdl" class="modal">
@@ -65,7 +52,7 @@
         <h3 id="mdlD" style="text-align:center;"></h3>
         <div id="dayH"></div>
         <hr style="margin:20px 0;">
-        <p><b>① お店を選ぶ</b></p>
+        <p><b>① お店を選んでね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
             <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
@@ -73,6 +60,7 @@
             <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食店</button>
             <button class="c-btn" onclick="showSub('other', this)">🛍️ その他</button>
         </div>
+
         <div id="sub-super" class="sub-g">
             <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
             <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button>
@@ -89,15 +77,22 @@
 
         <input type="text" id="memoIn" placeholder="メモ（買ったものなど）">
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
+        
+        <p><b>② レシートを撮る（任意）</b></p>
+        <input type="file" id="file" accept="image/*" capture="environment" style="display:none;">
+        <button type="button" class="cam-btn" onclick="document.getElementById('file').click()">📷 カメラを起動</button>
+        <img id="preview">
+
         <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
         <div id="loadText" style="display:none; text-align:center; font-weight:bold; color:var(--main-c); margin-top:10px;">送信中...🚀</div>
-        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px; cursor:pointer;">× 閉じる</p>
+        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× 閉じる</p>
     </div>
 </div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbw3Z6ev4wk5dD3ipUXFv5RA8fa_MIpBf8R3p9m2_mUrZM0Ab0EvTnqVoQoJTTgtFUNxmQ/exec";
-    let data = [], viewD = new Date(), selD = '', selSub = '';
+    const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
+    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
 
     window.onload = loadData;
 
@@ -112,14 +107,6 @@
         draw();
     }
 
-    // 祝日判定（簡易版：内閣府のデータ等は使わず、主要なものや日曜振替を考慮）
-    function isHoliday(y, m, d, w) {
-        const mmdd = `${m+1}-${d}`;
-        const holidays = ["1-1", "2-11", "2-23", "4-29", "5-3", "5-4", "5-5", "8-11", "11-3", "11-23"];
-        if (holidays.includes(mmdd)) return true;
-        return false; 
-    }
-
     function draw() {
         const y = viewD.getFullYear(), m = viewD.getMonth();
         document.getElementById('calT').innerText = `${y}年${m+1}月`;
@@ -127,24 +114,12 @@
         let row = '<tr>';
         for(let i=0; i<start; i++) row += '<td></td>';
         for(let d=1; d<=end; d++) {
-            const weekIdx = (start + d - 1) % 7;
-            if(weekIdx === 0 && d!==1) row += '</tr><tr>';
-            
+            if((start+d-1)%7===0 && d!==1) row += '</tr><tr>';
             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
-            
-            // 色分けクラスの判定
-            let cls = "";
-            if (weekIdx === 0 || isHoliday(y, m, d, weekIdx)) cls = "sun";
-            else if (weekIdx === 6) cls = "sat";
-
-            row += `<td onclick="opM('${ds}')" class="${cls}"><span class="day-n">${d}</span><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
+            row += `<td onclick="opM('${ds}')"><span class="day-n">${d}</span><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
-        updateSum(y, m);
-    }
-
-    function updateSum(y, m) {
         const ms = data.filter(e => e.d.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)).reduce((a,c)=>a+c.a,0);
         document.getElementById('mSum').innerText = '¥'+ms.toLocaleString();
         document.getElementById('ySum').innerText = '¥'+data.filter(e=>e.d.startsWith(y)).reduce((a,c)=>a+c.a,0).toLocaleString();
@@ -153,25 +128,27 @@
     async function doSave() {
         const a = document.getElementById('amtIn').value;
         if(!selSub || !a) return alert('お店と金額を入れてね');
-        send({cmd:'save', d:selD, c:selSub, a:Number(a), m:document.getElementById('memoIn').value});
+        send({cmd:'save', d:selD, c:selSub, a:Number(a), m:document.getElementById('memoIn').value, imgData: base64Data, folderId: FOLDER_ID});
     }
 
     async function doDel(idx) {
-        if(!confirm("これを消してもええかな？")) return;
+        if(!confirm("この記録を消してもいい？")) return;
         const target = data.filter(e => e.d === selD)[idx];
-        send({cmd:'delete', d:target.d, c:target.c, a:target.a});
+        send({cmd:'delete', d:target.d, c:target.c, a:target.a, m:target.m});
     }
 
     async function send(payload) {
         document.getElementById('saveBtn').disabled = true;
         document.getElementById('loadText').style.display='block';
-        await fetch(GAS_URL, {method:'POST', mode:'no-cors', body:JSON.stringify(payload)});
-        setTimeout(async () => {
-            await loadData();
-            clsM();
-            document.getElementById('saveBtn').disabled = false;
-            document.getElementById('loadText').style.display='none';
-        }, 1500);
+        try {
+            await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload)});
+            setTimeout(async () => {
+                await loadData();
+                clsM();
+                document.getElementById('saveBtn').disabled = false;
+                document.getElementById('loadText').style.display='none';
+            }, 1000);
+        } catch(e) { alert("エラーが起きました"); document.getElementById('saveBtn').disabled = false; }
     }
 
     function opM(d) {
@@ -191,19 +168,41 @@
         document.getElementById('sub-' + t).style.display = 'grid';
         b.classList.add('on');
     }
+
     function setSub(b, n) {
         document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on'));
         b.classList.add('on');
         selSub = n;
     }
+
     function clsM() {
         document.getElementById('mdl').style.display='none';
-        selSub='';
+        selSub=''; base64Data = ""; document.getElementById('preview').style.display = 'none';
         document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
         document.querySelectorAll('.c-btn, .sub-btn').forEach(b=>b.classList.remove('on'));
         document.getElementById('amtIn').value=''; document.getElementById('memoIn').value='';
     }
+
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
+
+    document.getElementById('file').onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = f => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const scale = 500 / img.width;
+                canvas.width = 500; canvas.height = img.height * scale;
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                base64Data = canvas.toDataURL('image/jpeg', 0.5);
+                document.getElementById('preview').src = base64Data;
+                document.getElementById('preview').style.display = 'block';
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
 </script>
 </body>
 </html>
