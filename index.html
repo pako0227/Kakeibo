@@ -9,18 +9,18 @@
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; font-size: 18px; color: #333; }
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
-        .summary b { display: block; font-size: 1.2rem; color: #2e7d32; }
+        .summary b { display: block; font-size: 1.1rem; color: #2e7d32; }
         .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th { font-size: 0.8rem; color: #888; padding-bottom: 5px; }
         th:nth-child(1) { color: var(--sun-c); }
         th:nth-child(7) { color: var(--sat-c); }
-        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; }
+        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; position: relative; }
         .day-n { font-weight: bold; font-size: 0.9rem; }
         .sun .day-n, .hol .day-n { color: var(--sun-c); }
         .sat .day-n { color: var(--sat-c); }
-        .day-amt { font-size: 0.7rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
+        .day-amt { font-size: 0.7rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; }
         .today { background-color: #fff9c4; border: 2px solid #fbc02d !important; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
@@ -34,9 +34,9 @@
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
         #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; border: 1px solid #eee; }
         #loadText { display:none; text-align:center; color:var(--main-c); font-weight:bold; margin-top:10px; }
-        .hist-item { padding: 8px; border-bottom: 1px solid #eee; }
+        .hist-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9rem; overflow: hidden; }
         .hist-shop { font-weight: bold; color: #333; }
-        .hist-memo { font-size: 0.8rem; color: #666; margin-left: 5px; }
+        .hist-memo { font-size: 0.8rem; color: #666; margin-left: 4px; }
         .hist-amt { float: right; color: var(--accent-c); font-weight: bold; }
     </style>
 </head>
@@ -50,7 +50,7 @@
 <div class="cal-box">
     <div class="cal-head">
         <button onclick="moveM(-1)">◀ 前月</button>
-        <b id="calT"></b>
+        <b id="calT">読み込み中...</b>
         <button onclick="moveM(1)">次月 ▶</button>
     </div>
     <table>
@@ -62,7 +62,7 @@
 <div id="mdl" class="modal">
     <div class="modal-con">
         <h2 id="mdlD" style="text-align:center; margin-top:0;">日付</h2>
-        <div id="dayH" style="max-height:100px; overflow-y:auto; background:#f9f9f9; padding:8px; border-radius:12px;"></div>
+        <div id="dayH" style="max-height:100px; overflow-y:auto; background:#f9f9f9; padding:8px; border-radius:12px; border: 1px solid #eee;"></div>
         
         <p style="margin: 15px 0 5px;"><b>① お店を選んでね</b></p>
         <div class="btn-g">
@@ -136,14 +136,19 @@
     let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
     const holidays = ["2026-01-01","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-07-20","2026-08-11","2026-09-21","2026-09-22","2026-09-23","2026-10-12","2026-11-03","2026-11-23"];
 
-    window.onload = () => { loadData(); };
+    // 起動時にデータを取得して描画
+    window.onload = async () => {
+        await loadData();
+    };
 
     async function loadData() {
         try {
             const res = await fetch(GAS_URL);
             data = await res.json();
             draw();
-        } catch (e) { console.log("読み込み中..."); }
+        } catch (e) {
+            document.getElementById('calT').innerText = "読込エラー";
+        }
     }
 
     function draw() {
@@ -152,24 +157,86 @@
         const start = new Date(y, m, 1).getDay(), end = new Date(y, m + 1, 0).getDate();
         const n = new Date();
         const todayStr = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+        
         let row = '<tr>';
         for (let i = 0; i < start; i++) row += '<td></td>';
         for (let d = 1; d <= end; d++) {
             const weekIdx = (start + d - 1) % 7;
             if (weekIdx === 0 && d !== 1) row += '</tr><tr>';
             const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const dayRecords = data.filter(e => String(e.d).startsWith(ds));
+            
+            // データからこの日の合計を計算
+            const dayRecords = data.filter(e => {
+                const dateStr = String(e.d).split('T')[0]; // ISO形式対策
+                return dateStr === ds;
+            });
             const sum = dayRecords.reduce((a, c) => a + Number(c.a), 0);
+            
             let cls = ds === todayStr ? 'today ' : '';
             if (holidays.includes(ds)) cls += 'hol ';
             if (weekIdx === 0) cls += 'sun ';
             if (weekIdx === 6) cls += 'sat ';
-            row += `<td class="${cls}" onclick="opM('${ds}')"><span class="day-n">${d}</span>${sum > 0 ? `<span class="day-amt">¥${sum.toLocaleString()}</span>` : ''}</td>`;
+            
+            row += `<td class="${cls}" onclick="opM('${ds}')">
+                <span class="day-n">${d}</span>
+                ${sum > 0 ? `<span class="day-amt">¥${sum.toLocaleString()}</span>` : ''}
+            </td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
         updateSum();
     }
 
+    async function doSave() {
+        const a = document.getElementById('amtIn').value;
+        const btn = document.getElementById('saveBtn');
+        const load = document.getElementById('loadText');
+        const memo = document.getElementById('memoIn').value;
+        if (!selSub || !a) return alert('お店と金額を入れてね');
+        
+        btn.disabled = true; load.style.display = 'block';
+        const payload = { d: selD, c: selSub, a: a, m: memo, imgData: base64Data, folderId: FOLDER_ID };
+        
+        try {
+            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+            const result = await res.json();
+            if(result.status === "success") {
+                // ローカルのデータに追加
+                data.push({ d: selD, c: selSub, a: Number(a), m: memo });
+                draw();
+                clsM();
+            } else {
+                alert("エラー: " + result.message);
+            }
+        } catch (e) {
+            alert("送信失敗。設定(Anyone)を確認してください");
+        } finally {
+            btn.disabled = false; load.style.display = 'none';
+        }
+    }
+
+    function updateSum() {
+        const y = viewD.getFullYear(), m = viewD.getMonth();
+        const mS = `${y}-${String(m + 1).padStart(2, '0')}`;
+        const mSum = data.filter(e => String(e.d).startsWith(mS)).reduce((a, c) => a + Number(c.a), 0);
+        document.getElementById('mSum').innerText = '¥' + mSum.toLocaleString();
+
+        const yS = `${y}`;
+        const ySum = data.filter(e => String(e.d).startsWith(yS)).reduce((a, c) => a + Number(c.a), 0);
+        document.getElementById('ySum').innerText = '¥' + ySum.toLocaleString();
+    }
+
+    function upHist() {
+        const h = data.filter(e => String(e.d).split('T')[0] === selD);
+        document.getElementById('dayH').innerHTML = h.map(e => `
+            <div class="hist-item">
+                <span class="hist-shop">${e.c}</span>
+                <span class="hist-memo">${e.m ? '(' + e.m + ')' : ''}</span>
+                <span class="hist-amt">¥${Number(e.a).toLocaleString()}</span>
+            </div>
+        `).join('') || '<div style="text-align:center;color:#999;padding:10px;">記録なし</div>';
+    }
+
+    // カメラ関連
     document.getElementById('file').onchange = e => {
         const file = e.target.files[0];
         const reader = new FileReader();
@@ -188,51 +255,12 @@
         reader.readAsDataURL(file);
     };
 
-    async function doSave() {
-        const a = document.getElementById('amtIn').value;
-        const btn = document.getElementById('saveBtn');
-        const load = document.getElementById('loadText');
-        const memo = document.getElementById('memoIn').value;
-        if (!selSub || !a) return alert('お店と金額を入れてね');
-        btn.disabled = true; load.style.display = 'block';
-        const payload = { d: selD, c: selSub, a: a, m: memo, imgData: base64Data, folderId: FOLDER_ID };
-        try {
-            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-            const result = await res.json();
-            if(result.status === "success") {
-                data.push({ d: selD, c: selSub, a: Number(a), m: memo });
-                draw(); clsM();
-            } else { alert("エラー: " + result.message); }
-        } catch (e) { alert("送信失敗。設定(Anyone)を確認してください"); }
-        finally { btn.disabled = false; load.style.display = 'none'; }
-    }
-
-    function updateSum() {
-        const n = new Date(), mS = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2, '0')}`;
-        const mSum = data.filter(e => String(e.d).startsWith(mS)).reduce((a, c) => a + Number(c.a), 0);
-        document.getElementById('mSum').innerText = '¥' + mSum.toLocaleString();
-        const yS = `${n.getFullYear()}`;
-        const ySum = data.filter(e => String(e.d).startsWith(yS)).reduce((a, c) => a + Number(c.a), 0);
-        document.getElementById('ySum').innerText = '¥' + ySum.toLocaleString();
-    }
     function showSub(t, b) { document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none'); document.querySelectorAll('.c-btn').forEach(x => x.classList.remove('on')); document.getElementById('sub-' + t).style.display = 'grid'; b.classList.add('on'); }
     function setSub(b, n) { document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); selSub = n; }
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
     function opM(d) { selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/'); upHist(); document.getElementById('mdl').style.display = 'block'; }
     function clsM() { document.getElementById('mdl').style.display = 'none'; reset(); }
     function reset() { document.getElementById('amtIn').value = ''; document.getElementById('memoIn').value = ''; base64Data = ""; document.getElementById('preview').style.display = 'none'; selSub = ''; document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none'); document.querySelectorAll('.c-btn, .sub-btn').forEach(b => b.classList.remove('on')); }
-    
-    // 詳細履歴を表示する関数を強化
-    function upHist() {
-        const h = data.filter(e => String(e.d).startsWith(selD));
-        document.getElementById('dayH').innerHTML = h.map(e => `
-            <div class="hist-item">
-                <span class="hist-shop">${e.c}</span>
-                <span class="hist-memo">${e.m ? '(' + e.m + ')' : ''}</span>
-                <span class="hist-amt">¥${Number(e.a).toLocaleString()}</span>
-            </div>
-        `).join('') || "記録なし";
-    }
 </script>
 </body>
 </html>
