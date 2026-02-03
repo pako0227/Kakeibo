@@ -5,20 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>親孝行家計簿</title>
     <style>
-        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; }
+        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; --sun-c: #ff5252; --sat-c: #448aff; }
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; font-size: 18px; color: #333; }
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
         .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        /* 曜日のヘッダー色 */
+        th:nth-child(1) { color: var(--sun-c); }
+        th:nth-child(7) { color: var(--sat-c); }
         td { height: 65px; border: 1px solid #f0f0f0; text-align: center; vertical-align: top; padding: 5px; cursor: pointer; }
+        
+        /* 土日の日付の色 */
+        .sun { color: var(--sun-c); background-color: #fff5f5; }
+        .sat { color: var(--sat-c); background-color: #f5faff; }
+        .holiday { color: var(--sun-c); background-color: #fff5f5; }
+
         .day-n { font-weight: bold; font-size: 0.9rem; }
         .day-amt { font-size: 0.65rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
+        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
-        .del-btn { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
+        .del-btn { background: #ff5252; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
         .c-btn { padding: 12px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 0.9rem; }
         .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
@@ -32,17 +42,22 @@
 <body>
 
 <div class="summary">
-    <div>今月合計<b id="mSum">¥0</b></div>
-    <div>今年合計<b id="ySum">¥0</b></div>
+    <div>今月<b id="mSum">¥0</b></div>
+    <div>今年<b id="ySum">¥0</b></div>
 </div>
 
 <div class="cal-box">
     <div class="cal-head">
         <button onclick="moveM(-1)">◀ 前月</button>
-        <b id="calT">読み込み中...</b>
+        <b id="calT">読込中...</b>
         <button onclick="moveM(1)">次月 ▶</button>
     </div>
-    <table><tbody id="calB"></tbody></table>
+    <table>
+        <thead>
+            <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
+        </thead>
+        <tbody id="calB"></tbody>
+    </table>
 </div>
 
 <div id="mdl" class="modal">
@@ -50,7 +65,7 @@
         <h3 id="mdlD" style="text-align:center;"></h3>
         <div id="dayH"></div>
         <hr style="margin:20px 0;">
-        <p><b>① お店を選んでね</b></p>
+        <p><b>① お店を選ぶ</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
             <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
@@ -58,7 +73,6 @@
             <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食店</button>
             <button class="c-btn" onclick="showSub('other', this)">🛍️ その他</button>
         </div>
-
         <div id="sub-super" class="sub-g">
             <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
             <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button>
@@ -75,10 +89,9 @@
 
         <input type="text" id="memoIn" placeholder="メモ（買ったものなど）">
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
-        
         <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
         <div id="loadText" style="display:none; text-align:center; font-weight:bold; color:var(--main-c); margin-top:10px;">送信中...🚀</div>
-        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× 閉じる</p>
+        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px; cursor:pointer;">× 閉じる</p>
     </div>
 </div>
 
@@ -99,6 +112,14 @@
         draw();
     }
 
+    // 祝日判定（簡易版：内閣府のデータ等は使わず、主要なものや日曜振替を考慮）
+    function isHoliday(y, m, d, w) {
+        const mmdd = `${m+1}-${d}`;
+        const holidays = ["1-1", "2-11", "2-23", "4-29", "5-3", "5-4", "5-5", "8-11", "11-3", "11-23"];
+        if (holidays.includes(mmdd)) return true;
+        return false; 
+    }
+
     function draw() {
         const y = viewD.getFullYear(), m = viewD.getMonth();
         document.getElementById('calT').innerText = `${y}年${m+1}月`;
@@ -106,10 +127,18 @@
         let row = '<tr>';
         for(let i=0; i<start; i++) row += '<td></td>';
         for(let d=1; d<=end; d++) {
-            if((start+d-1)%7===0 && d!==1) row += '</tr><tr>';
+            const weekIdx = (start + d - 1) % 7;
+            if(weekIdx === 0 && d!==1) row += '</tr><tr>';
+            
             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
-            row += `<td onclick="opM('${ds}')"><span class="day-n">${d}</span><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
+            
+            // 色分けクラスの判定
+            let cls = "";
+            if (weekIdx === 0 || isHoliday(y, m, d, weekIdx)) cls = "sun";
+            else if (weekIdx === 6) cls = "sat";
+
+            row += `<td onclick="opM('${ds}')" class="${cls}"><span class="day-n">${d}</span><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
         updateSum(y, m);
@@ -128,23 +157,21 @@
     }
 
     async function doDel(idx) {
-        if(!confirm("この記録を消してもいい？")) return;
+        if(!confirm("これを消してもええかな？")) return;
         const target = data.filter(e => e.d === selD)[idx];
-        send({cmd:'delete', d:target.d, c:target.c, a:target.a, m:target.m});
+        send({cmd:'delete', d:target.d, c:target.c, a:target.a});
     }
 
     async function send(payload) {
         document.getElementById('saveBtn').disabled = true;
         document.getElementById('loadText').style.display='block';
-        try {
-            await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload)});
+        await fetch(GAS_URL, {method:'POST', mode:'no-cors', body:JSON.stringify(payload)});
+        setTimeout(async () => {
             await loadData();
             clsM();
-        } catch(e) { alert("エラーが起きました"); }
-        finally {
             document.getElementById('saveBtn').disabled = false;
             document.getElementById('loadText').style.display='none';
-        }
+        }, 1500);
     }
 
     function opM(d) {
@@ -164,13 +191,11 @@
         document.getElementById('sub-' + t).style.display = 'grid';
         b.classList.add('on');
     }
-
     function setSub(b, n) {
         document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on'));
         b.classList.add('on');
         selSub = n;
     }
-
     function clsM() {
         document.getElementById('mdl').style.display='none';
         selSub='';
@@ -178,7 +203,6 @@
         document.querySelectorAll('.c-btn, .sub-btn').forEach(b=>b.classList.remove('on'));
         document.getElementById('amtIn').value=''; document.getElementById('memoIn').value='';
     }
-
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
 </script>
 </body>
