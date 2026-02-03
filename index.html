@@ -5,42 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>親孝行家計簿</title>
     <style>
-        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; --sun-c: #ff5252; --sat-c: #448aff; }
+        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; }
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; font-size: 18px; color: #333; }
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
-        .summary b { display: block; font-size: 1.1rem; color: #2e7d32; }
-        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th { font-size: 0.8rem; color: #888; padding-bottom: 5px; }
-        th:nth-child(1) { color: var(--sun-c); }
-        th:nth-child(7) { color: var(--sat-c); }
-        td { height: 75px; border: 1px solid #f0f0f0; vertical-align: top; padding: 5px; cursor: pointer; position: relative; }
+        td { height: 65px; border: 1px solid #f0f0f0; text-align: center; vertical-align: top; padding: 5px; cursor: pointer; }
         .day-n { font-weight: bold; font-size: 0.9rem; }
-        .sun .day-n { color: var(--sun-c); }
-        .sat .day-n { color: var(--sat-c); }
-        .day-amt { font-size: 0.7rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; }
-        .today { background-color: #fff9c4; border: 2px solid #fbc02d !important; }
+        .day-amt { font-size: 0.65rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
+        .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
+        .del-btn { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
         .c-btn { padding: 12px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 0.9rem; }
         .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
-        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f1f8e9; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
         .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.85rem; }
         .sub-btn.on { background: #81c784; color: white; }
-        input[type="number"], input[type="text"] { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
-        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; border: 1px solid #eee; }
-        #loadText { display:none; text-align:center; color:var(--main-c); font-weight:bold; margin-top:10px; }
-        .hist-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; background: #fff; margin-bottom: 5px; border-radius: 8px; }
-        .hist-left { flex: 1; }
-        .hist-shop { font-weight: bold; color: #333; display: block; font-size: 1rem; }
-        .hist-memo { font-size: 0.8rem; color: #666; }
-        .hist-right { text-align: right; margin-right: 10px; }
-        .hist-amt { color: var(--accent-c); font-weight: bold; display: block; }
-        .del-btn { background: #ffebee; border: none; color: #f44336; font-size: 1.2rem; padding: 8px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -52,22 +38,19 @@
 
 <div class="cal-box">
     <div class="cal-head">
-        <button onclick="moveM(-1)">◀</button>
+        <button onclick="moveM(-1)">◀ 前月</button>
         <b id="calT">読み込み中...</b>
-        <button onclick="moveM(1)">▶</button>
+        <button onclick="moveM(1)">次月 ▶</button>
     </div>
-    <table>
-        <thead><tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr></thead>
-        <tbody id="calB"></tbody>
-    </table>
+    <table><tbody id="calB"></tbody></table>
 </div>
 
 <div id="mdl" class="modal">
     <div class="modal-con">
-        <h2 id="mdlD" style="text-align:center; margin-top:0;">日付</h2>
-        <div id="dayH" style="max-height:180px; overflow-y:auto; background:#f0f0f0; padding:10px; border-radius:15px; margin-bottom:15px;"></div>
-        
-        <p style="margin: 15px 0 5px;"><b>① お店を選んでね</b></p>
+        <h3 id="mdlD" style="text-align:center;"></h3>
+        <div id="dayH"></div>
+        <hr style="margin:20px 0;">
+        <p><b>① お店を選んでね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
             <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
@@ -88,151 +71,115 @@
         <div id="sub-hosp" class="sub-g"><button class="sub-btn" onclick="setSub(this,'橋間診療所')">橋間</button><button class="sub-btn" onclick="setSub(this,'やぎ医院')">やぎ</button><button class="sub-btn" onclick="setSub(this,'岩田歯科')">岩田</button><button class="sub-btn" onclick="setSub(this,'暁明館病院')">暁明館</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
         <div id="sub-drug" class="sub-g"><button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button><button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button><button class="sub-btn" onclick="setSub(this,'ココカラ')">ココカラ</button><button class="sub-btn" onclick="setSub(this,'アオキ')">アオキ</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
         <div id="sub-eat" class="sub-g"><button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button><button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button><button class="sub-btn" onclick="setSub(this,'しゃぶ葉')">しゃぶ葉</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
-        <div id="sub-other" class="sub-g"><button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セリア')">セリア</button><button class="sub-btn" onclick="setSub(this,'ニトリ')">ニトリ</button><button class="sub-btn" onclick="setSub(this,'カルディ')">カルディ</button><button class="sub-btn" onclick="setSub(this,'３コインズ')">3C</button><button class="sub-btn" onclick="setSub(this,'美容院')">美容院</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
+        <div id="sub-other" class="sub-g"><button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セリア')">セリア</button><button class="sub-btn" onclick="setSub(this,'ニトリ')">ニトリ</button><button class="sub-btn" onclick="setSub(this,'カルディ')">カルディ</button><button class="sub-btn" onclick="setSub(this,'美容院')">美容院</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
 
-        <p style="margin: 15px 0 5px;"><b>② 何を買った？（メモ）</b></p>
-        <input type="text" id="memoIn" placeholder="例：お肉、お薬代、お祝い">
-        <p style="margin: 15px 0 5px;"><b>③ 金額</b></p>
-        <input type="number" id="amtIn" inputmode="numeric" placeholder="￥0" style="font-size:1.8rem; font-weight:bold; color:var(--accent-c);">
-        <p style="margin: 15px 0 5px;"><b>④ レシートを撮る（任意）</b></p>
-        <input type="file" id="file" accept="image/*" capture="environment" style="display:none;">
-        <button type="button" onclick="document.getElementById('file').click()" style="background:#666; color:white; padding:12px; border:none; border-radius:8px; width:100%;">📷 カメラを起動</button>
-        <img id="preview">
+        <input type="text" id="memoIn" placeholder="メモ（買ったものなど）">
+        <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
+        
         <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
-        <div id="loadText">通信中...🚀</div>
-        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px; cursor:pointer;">× キャンセル</p>
+        <div id="loadText" style="display:none; text-align:center; font-weight:bold; color:var(--main-c); margin-top:10px;">送信中...🚀</div>
+        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× 閉じる</p>
     </div>
 </div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbw3Z6ev4wk5dD3ipUXFv5RA8fa_MIpBf8R3p9m2_mUrZM0Ab0EvTnqVoQoJTTgtFUNxmQ/exec";
-    const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
-    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
+    let data = [], viewD = new Date(), selD = '', selSub = '';
 
-    window.onload = () => { loadData(); };
+    window.onload = loadData;
 
     async function loadData() {
-        try {
-            const res = await fetch(GAS_URL);
-            let raw = await res.json();
-            data = raw.map(item => {
-                let d = new Date(item.d);
-                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                item.d = d.toISOString().split('T')[0];
-                item.a = Number(item.a); // 金額を確実に数字にする
-                return item;
-            });
-            draw();
-        } catch (e) { document.getElementById('calT').innerText = "エラー"; }
+        const res = await fetch(GAS_URL);
+        data = await res.json();
+        data = data.map(i => {
+            let d = new Date(i.d);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            return {...i, d: d.toISOString().split('T')[0], a: Number(i.a)};
+        });
+        draw();
     }
 
     function draw() {
         const y = viewD.getFullYear(), m = viewD.getMonth();
-        document.getElementById('calT').innerText = `${y}年${m + 1}月`;
-        const start = new Date(y, m, 1).getDay(), end = new Date(y, m + 1, 0).getDate();
-        const n = new Date();
-        const todayStr = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
-        
+        document.getElementById('calT').innerText = `${y}年${m+1}月`;
+        const start = new Date(y, m, 1).getDay(), end = new Date(y, m+1, 0).getDate();
         let row = '<tr>';
-        for (let i = 0; i < start; i++) row += '<td></td>';
-        for (let d = 1; d <= end; d++) {
-            const weekIdx = (start + d - 1) % 7;
-            if (weekIdx === 0 && d !== 1) row += '</tr><tr>';
-            const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        for(let i=0; i<start; i++) row += '<td></td>';
+        for(let d=1; d<=end; d++) {
+            if((start+d-1)%7===0 && d!==1) row += '</tr><tr>';
+            const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
-            let cls = ds === todayStr ? 'today ' : '';
-            if (weekIdx === 0) cls += 'sun ';
-            if (weekIdx === 6) cls += 'sat ';
-            row += `<td class="${cls}" onclick="opM('${ds}')"><span class="day-n">${d}</span>${sum > 0 ? `<span class="day-amt">¥${sum.toLocaleString()}</span>` : ''}</td>`;
+            row += `<td onclick="opM('${ds}')"><span class="day-n">${d}</span><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
-        updateSum();
+        updateSum(y, m);
+    }
+
+    function updateSum(y, m) {
+        const ms = data.filter(e => e.d.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)).reduce((a,c)=>a+c.a,0);
+        document.getElementById('mSum').innerText = '¥'+ms.toLocaleString();
+        document.getElementById('ySum').innerText = '¥'+data.filter(e=>e.d.startsWith(y)).reduce((a,c)=>a+c.a,0).toLocaleString();
     }
 
     async function doSave() {
         const a = document.getElementById('amtIn').value;
-        const memo = document.getElementById('memoIn').value;
-        if (!selSub || !a) return alert('お店と金額を入れてね');
-        document.getElementById('saveBtn').disabled = true;
-        document.getElementById('loadText').style.display = 'block';
-        const payload = { method: "save", d: selD, c: selSub, a: Number(a), m: memo, imgData: base64Data, folderId: FOLDER_ID };
-        try {
-            await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-            data.push({ d: selD, c: selSub, a: Number(a), m: memo });
-            draw(); clsM();
-        } catch (e) { alert("送信失敗"); }
-        finally { document.getElementById('saveBtn').disabled = false; document.getElementById('loadText').style.display = 'none'; }
+        if(!selSub || !a) return alert('お店と金額を入れてね');
+        send({cmd:'save', d:selD, c:selSub, a:Number(a), m:document.getElementById('memoIn').value});
     }
 
     async function doDel(idx) {
         if(!confirm("この記録を消してもいい？")) return;
-        const dayItems = data.filter(e => e.d === selD);
-        const target = dayItems[idx];
-        document.getElementById('loadText').style.display = 'block';
-        const payload = { method: "delete", d: target.d, c: target.c, a: target.a, m: target.m };
-        try {
-            const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
-            const result = await res.json();
-            if(result.status === "success") {
-                // 全体データから削除
-                const realIdx = data.findIndex(e => e.d === target.d && e.c === target.c && e.a === target.a && e.m === target.m);
-                if (realIdx > -1) data.splice(realIdx, 1);
-                draw(); upHist();
-            } else { alert("消せませんでした: " + result.message); }
-        } catch (e) { alert("通信エラーで消せませんでした"); }
-        finally { document.getElementById('loadText').style.display = 'none'; }
+        const target = data.filter(e => e.d === selD)[idx];
+        send({cmd:'delete', d:target.d, c:target.c, a:target.a, m:target.m});
     }
 
-    function upHist() {
-        const h = data.filter(e => e.d === selD);
+    async function send(payload) {
+        document.getElementById('saveBtn').disabled = true;
+        document.getElementById('loadText').style.display='block';
+        try {
+            await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload)});
+            await loadData();
+            clsM();
+        } catch(e) { alert("エラーが起きました"); }
+        finally {
+            document.getElementById('saveBtn').disabled = false;
+            document.getElementById('loadText').style.display='none';
+        }
+    }
+
+    function opM(d) {
+        selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/');
+        const h = data.filter(e => e.d === d);
         document.getElementById('dayH').innerHTML = h.map((e, i) => `
             <div class="hist-item">
-                <div class="hist-left">
-                    <span class="hist-shop">${e.c}</span>
-                    <span class="hist-memo">${e.m || ''}</span>
-                </div>
-                <div class="hist-right">
-                    <span class="hist-amt">¥${Number(e.a).toLocaleString()}</span>
-                </div>
-                <button class="del-btn" onclick="event.stopPropagation(); doDel(${i})">🗑️</button>
-            </div>
-        `).join('') || '<div style="text-align:center; color:#888;">記録なし</div>';
+                <span><b>${e.c}</b><br><small>${e.m||''}</small> ¥${e.a.toLocaleString()}</span>
+                <button class="del-btn" onclick="doDel(${i})">消す</button>
+            </div>`).join('') || "記録なし";
+        document.getElementById('mdl').style.display='block';
     }
 
-    function updateSum() {
-        const y = viewD.getFullYear(), m = viewD.getMonth();
-        const mS = `${y}-${String(m + 1).padStart(2, '0')}`;
-        const mSum = data.filter(e => e.d.startsWith(mS)).reduce((a, c) => a + c.a, 0);
-        document.getElementById('mSum').innerText = '¥' + mSum.toLocaleString();
-        const ySum = data.filter(e => e.d.startsWith(`${y}`)).reduce((a, c) => a + c.a, 0);
-        document.getElementById('ySum').innerText = '¥' + ySum.toLocaleString();
+    function showSub(t, b) {
+        document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
+        document.querySelectorAll('.c-btn').forEach(x => x.classList.remove('on'));
+        document.getElementById('sub-' + t).style.display = 'grid';
+        b.classList.add('on');
     }
 
-    function opM(d) { selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/'); upHist(); document.getElementById('mdl').style.display = 'block'; }
-    function clsM() { document.getElementById('mdl').style.display = 'none'; reset(); }
-    function reset() { document.getElementById('amtIn').value = ''; document.getElementById('memoIn').value = ''; base64Data = ""; document.getElementById('preview').style.display = 'none'; selSub = ''; document.querySelectorAll('.sub-g, .c-btn, .sub-btn').forEach(el => { el.style.display = el.classList.contains('sub-g') ? 'none' : ''; el.classList.remove('on'); }); }
-    function showSub(t, b) { document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none'); document.querySelectorAll('.c-btn').forEach(x => x.classList.remove('on')); document.getElementById('sub-' + t).style.display = 'grid'; b.classList.add('on'); }
-    function setSub(b, n) { document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); selSub = n; }
+    function setSub(b, n) {
+        document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+        selSub = n;
+    }
+
+    function clsM() {
+        document.getElementById('mdl').style.display='none';
+        selSub='';
+        document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
+        document.querySelectorAll('.c-btn, .sub-btn').forEach(b=>b.classList.remove('on'));
+        document.getElementById('amtIn').value=''; document.getElementById('memoIn').value='';
+    }
+
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
-
-    document.getElementById('file').onchange = e => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = f => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const scale = 500 / img.width;
-                canvas.width = 500; canvas.height = img.height * scale;
-                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                base64Data = canvas.toDataURL('image/jpeg', 0.5);
-                document.getElementById('preview').src = base64Data;
-                document.getElementById('preview').style.display = 'block';
-            };
-            img.src = f.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
 </script>
 </body>
 </html>
