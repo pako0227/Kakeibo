@@ -12,7 +12,6 @@
         .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        /* 土日の色 */
         th:nth-child(1) { color: var(--sun-c); }
         th:nth-child(7) { color: var(--sat-c); }
         .sun .day-n { color: var(--sun-c); }
@@ -55,34 +54,14 @@
             <button class="c-btn" onclick="showSub('other', this)">🛍️ その他</button>
         </div>
         <div id="sub-super" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
-            <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button>
-            <button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー</button>
-            <button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button>
-            <button class="sub-btn" onclick="setSub(this,'万代')">万代</button>
-            <button class="sub-btn" onclick="setSub(this,'松源')">松源</button>
-            <button class="sub-btn" onclick="setSub(this,'アローズ')">アローズ</button>
-            <button class="sub-btn" onclick="setSub(this,'ドンキ')">ドンキ</button>
-            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+            <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button><button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button><button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー</button><button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button><button class="sub-btn" onclick="setSub(this,'万代')">万代</button><button class="sub-btn" onclick="setSub(this,'松源')">松源</button><button class="sub-btn" onclick="setSub(this,'アローズ')">アローズ</button><button class="sub-btn" onclick="setSub(this,'ドンキ')">ドンキ</button><button class="sub-btn" onclick="setSub(this,'バロー')">バロー</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
         <div id="sub-hosp" class="sub-g"><button class="sub-btn" onclick="setSub(this,'橋間診療所')">橋間</button><button class="sub-btn" onclick="setSub(this,'やぎ医院')">やぎ</button><button class="sub-btn" onclick="setSub(this,'岩田歯科')">岩田</button><button class="sub-btn" onclick="setSub(this,'暁明館病院')">暁明館</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
-        <div id="sub-drug" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button>
-            <button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button>
-            <button class="sub-btn" onclick="setSub(this,'ココカラ')">ココカラ</button>
-            <button class="sub-btn" onclick="setSub(this,'アオキ')">アオキ</button>
-            <button class="sub-btn" onclick="setSub(this,'エバグリーン')">エバグリーン</button>
-            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        <div id="sub-drug" class="sub-g"><button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button><button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button><button class="sub-btn" onclick="setSub(this,'ココカラ')">ココカラ</button><button class="sub-btn" onclick="setSub(this,'アオキ')">アオキ</button><button class="sub-btn" onclick="setSub(this,'エバグリーン')">エバグリーン</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
+        <div id="sub-eat" class="sub-g"><button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button><button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button><button class="sub-btn" onclick="setSub(this,'しゃぶ葉')">しゃぶ葉</button><button class="sub-btn" onclick="setSub(this,'神楽坂さくら')">神楽坂さくら</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
+        <div id="sub-other" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セリア')">セリア</button><button class="sub-btn" onclick="setSub(this,'ニトリ')">ニトリ</button><button class="sub-btn" onclick="setSub(this,'カルディ')">カルディ</button><button class="sub-btn" onclick="setSub(this,'美容院')">美容院</button><button class="sub-btn" onclick="setSub(this,'無印良品')">無印</button><button class="sub-btn" onclick="setSub(this,'ローソン')">ローソン</button><button class="sub-btn" onclick="setSub(this,'ファミマ')">ファミマ</button><button class="sub-btn" onclick="setSub(this,'セブンイレブン')">セブイレ</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
-        <div id="sub-eat" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button>
-            <button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button>
-            <button class="sub-btn" onclick="setSub(this,'しゃぶ葉')">しゃぶ葉</button>
-            <button class="sub-btn" onclick="setSub(this,'神楽坂さくら')">神楽坂さくら</button>
-            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
-        </div>
-        <div id="sub-other" class="sub-g"><button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セリア')">セリア</button><button class="sub-btn" onclick="setSub(this,'ニトリ')">ニトリ</button><button class="sub-btn" onclick="setSub(this,'カルディ')">カルディ</button><button class="sub-btn" onclick="setSub(this,'美容院')">美容院</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
-        
         <input type="text" id="memoIn" placeholder="メモ（買ったものなど）">
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
         <p><b>② レシートを撮る（任意）</b></p>
@@ -103,8 +82,7 @@
         const res = await fetch(GAS_URL);
         data = await res.json();
         data = data.map(i => {
-            let d = new Date(i.d);
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            let d = new Date(i.d); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
             return {...i, d: d.toISOString().split('T')[0], a: Number(i.a), m: i.m};
         });
         draw();
@@ -116,8 +94,7 @@
         let row = '<tr>';
         for(let i=0; i<start; i++) row += '<td></td>';
         for(let d=1; d<=end; d++) {
-            const wi = (start+d-1)%7;
-            if(wi===0 && d!==1) row += '</tr><tr>';
+            const wi = (start+d-1)%7; if(wi===0 && d!==1) row += '</tr><tr>';
             const cls = wi===0?'sun':(wi===6?'sat':'');
             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
@@ -139,8 +116,7 @@
         send({cmd:'delete', d:target.d, c:target.c, a:target.a, m:target.m});
     }
     async function send(payload) {
-        document.getElementById('saveBtn').disabled = true;
-        document.getElementById('loadText').style.display='block';
+        document.getElementById('saveBtn').disabled = true; document.getElementById('loadText').style.display='block';
         try {
             await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload)});
             setTimeout(async () => { await loadData(); clsM(); document.getElementById('saveBtn').disabled = false; document.getElementById('loadText').style.display='none'; }, 1000);
@@ -156,6 +132,7 @@
     function setSub(b, n) { document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); selSub = n; }
     function clsM() { document.getElementById('mdl').style.display='none'; selSub=''; base64Data = ""; document.getElementById('preview').style.display = 'none'; document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none'); document.querySelectorAll('.c-btn, .sub-btn').forEach(b=>b.classList.remove('on')); document.getElementById('amtIn').value=''; document.getElementById('memoIn').value=''; }
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
+
     document.getElementById('file').onchange = e => {
         const file = e.target.files[0];
         const reader = new FileReader();
@@ -163,11 +140,17 @@
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const scale = 500 / img.width;
-                canvas.width = 500; canvas.height = img.height * scale;
-                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                base64Data = canvas.toDataURL('image/jpeg', 0.5);
-                document.getElementById('preview').src = base64Data; document.getElementById('preview').style.display = 'block';
+                const maxWidth = 500;
+                const scale = maxWidth / img.width;
+                canvas.width = maxWidth;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                base64Data = canvas.toDataURL('image/jpeg', 0.4);
+                document.getElementById('preview').src = base64Data;
+                document.getElementById('preview').style.display = 'block';
             };
             img.src = f.target.result;
         };
