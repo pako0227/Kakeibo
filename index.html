@@ -48,7 +48,7 @@
             <input type="file" id="fileIn" accept="image/*" capture="environment" style="display:none">
             <img id="preview">
         </div>
-        <div id="loadText" style="display:none;">解析中...（10秒くらい待ってね）</div>
+        <div id="loadText" style="display:none;">解析中...</div>
         <p><b>② 内容を確認してね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
@@ -59,8 +59,7 @@
         <div id="sub-super" class="sub-g">
             <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
             <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button>
-            <button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー</button>
-            <button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button>
+            <button class="sub-btn" onclick="setSub(this,'ラムー')">ラムー</button>
             <button class="sub-btn" onclick="setSub(this,'万代')">万代</button>
             <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
@@ -133,7 +132,9 @@
 
     async function loadData() {
         const res = await fetch(GAS_URL);
-        data = await res.json();
+        const rawData = await res.json();
+        // A日付, B項目, C備考, D金額 に合わせてマッピング
+        data = rawData.map(r => ({ d: r.d, c: r.c, m: r.m, a: r.a }));
         draw();
     }
 
@@ -152,21 +153,18 @@
         for(let d=1; d<=end; d++) {
             const wi = (start+d-1)%7; if(wi===0 && d!==1) row += '</tr><tr>';
             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            // 数字だけを合計するように修正
-            const sum = data.filter(e => fmtD(e.d) === ds).reduce((a, c) => a + (Number(c.a) || 0), 0);
+            const sum = data.filter(e => fmtD(e.d) === ds).reduce((acc, curr) => acc + (Number(curr.a) || 0), 0);
             row += `<td onclick="opM('${ds}')"><span class="day-n">${d}</span><br><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
         
-        // 今月の合計（数字以外を飛ばす）
         const curMSum = data.filter(e => {
             const ed = new Date(e.d);
             return ed.getFullYear() === y && ed.getMonth() === m;
-        }).reduce((a,c)=>a+(Number(c.a) || 0),0);
+        }).reduce((acc,curr)=>acc+(Number(curr.a) || 0),0);
         document.getElementById('mSum').innerText = '¥'+curMSum.toLocaleString();
         
-        // 年間の合計（数字以外を飛ばす）
-        const curYSum = data.filter(e => new Date(e.d).getFullYear() === y).reduce((a,c)=>a+(Number(c.a) || 0),0);
+        const curYSum = data.filter(e => new Date(e.d).getFullYear() === y).reduce((acc,curr)=>acc+(Number(curr.a) || 0),0);
         document.getElementById('ySum').innerText = '¥'+curYSum.toLocaleString();
     }
 
