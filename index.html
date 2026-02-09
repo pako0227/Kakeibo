@@ -3,90 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>親孝行家計簿</title>
+    <title>親孝行家計簿・OCR版</title>
     <style>
-        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; --sun-c: #ff5252; --sat-c: #448aff; }
+        :root { --main-c: #4CAF50; --accent-c: #e91e63; --sub-c: #f1f8e9; }
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; font-size: 18px; color: #333; }
         .summary { background: #fff; padding: 15px; display: flex; gap: 10px; border-bottom: 3px solid var(--main-c); position: sticky; top: 0; z-index: 10; }
         .summary div { flex: 1; background: var(--sub-c); padding: 10px; border-radius: 12px; text-align: center; }
         .cal-box { background: #fff; margin: 10px; border-radius: 15px; padding: 10px; }
         .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th:nth-child(1) { color: var(--sun-c); }
-        th:nth-child(7) { color: var(--sat-c); }
-        .sun .day-n { color: var(--sun-c); }
-        .sat .day-n { color: var(--sat-c); }
         td { height: 65px; border: 1px solid #f0f0f0; text-align: center; vertical-align: top; padding: 5px; cursor: pointer; }
-        .day-n { font-weight: bold; font-size: 0.9rem; }
-        .day-amt { font-size: 0.65rem; color: var(--accent-c); display: block; font-weight: bold; margin-top: 5px; }
+        .day-n { font-weight: bold; }
+        .day-amt { font-size: 0.65rem; color: var(--accent-c); font-weight: bold; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
-        .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
-        .del-btn { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
+        
+        /* フォームのスタイル */
+        .cam-area { text-align: center; background: #eee; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 2px dashed #ccc; }
+        #preview { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1.1rem; background: #fff; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
         .c-btn { padding: 12px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 0.9rem; }
         .c-btn.on { background: var(--main-c); color: white; border-color: var(--main-c); }
         .sub-g { display: none; grid-template-columns: 1fr 1fr; gap: 5px; background: #f1f8e9; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
-        .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 0.85rem; }
+        .sub-btn { padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
         .sub-btn.on { background: #81c784; color: white; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
-        .cam-btn { width: 100%; padding: 12px; background: #666; color: white; border: none; border-radius: 10px; margin: 10px 0; }
-        #preview { width: 100%; margin-top: 10px; border-radius: 10px; display: none; }
         .save-btn { width: 100%; padding: 18px; background: var(--main-c); color: white; border: none; border-radius: 50px; font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
+        #loadText { color: var(--accent-c); font-weight: bold; text-align: center; margin: 10px 0; }
+        .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
-<div class="summary"><div>今月合計<b id="mSum">¥0</b></div><div>今年合計<b id="ySum">¥0</b></div></div>
+<div class="summary"><div>今月<b id="mSum">¥0</b></div><div>今年<b id="ySum">¥0</b></div></div>
 <div class="cal-box">
-    <div class="cal-head"><button onclick="moveM(-1)">◀ 前月</button><b id="calT">読込中...</b><button onclick="moveM(1)">次月 ▶</button></div>
-    <table><thead><tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr></thead><tbody id="calB"></tbody></table>
+    <div class="cal-head"><button onclick="moveM(-1)">◀ 前月</button><b id="calT">...</b><button onclick="moveM(1)">次月 ▶</button></div>
+    <table><tbody id="calB"></tbody></table>
 </div>
+
 <div id="mdl" class="modal">
     <div class="modal-con">
         <h3 id="mdlD" style="text-align:center;"></h3>
-        <div id="dayH"></div><hr style="margin:20px 0;">
-        <p><b>① お店を選んでね</b></p>
+        <div id="dayH"></div><hr>
+        
+        <p><b>① レシートをパシャッ！</b></p>
+        <div class="cam-area" onclick="document.getElementById('fileIn').click()">
+            <span id="camMsg">📷 ここを押してカメラ起動</span>
+            <input type="file" id="fileIn" accept="image/*" capture="environment" style="display:none">
+            <img id="preview">
+        </div>
+        <div id="loadText" style="display:none;">解析中...（10秒くらい待ってね）</div>
+
+        <p><b>② 内容を確認してね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
-            <button class="c-btn" onclick="showSub('hosp', this)">🏥 病院</button>
             <button class="c-btn" onclick="showSub('drug', this)">💊 ドラッグ</button>
-            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食店</button>
+            <button class="c-btn" onclick="showSub('eat', this)">🍴 飲食</button>
             <button class="c-btn" onclick="showSub('other', this)">🛍️ その他</button>
         </div>
         <div id="sub-super" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button><button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button><button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー</button><button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button><button class="sub-btn" onclick="setSub(this,'万代')">万代</button><button class="sub-btn" onclick="setSub(this,'松源')">松源</button><button class="sub-btn" onclick="setSub(this,'アローズ')">アローズ</button><button class="sub-btn" onclick="setSub(this,'ドンキ')">ドンキ</button><button class="sub-btn" onclick="setSub(this,'バロー')">バロー</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+            <button class="sub-btn" onclick="setSub(this,'ロピア')">ロピア</button>
+            <button class="sub-btn" onclick="setSub(this,'業務スーパー')">業スー</button>
+            <button class="sub-btn" onclick="setSub(this,'ラムー系列')">ラムー</button>
+            <button class="sub-btn" onclick="setSub(this,'ダイレックス')">ダイレックス</button>
+            <button class="sub-btn" onclick="setSub(this,'万代')">万代</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
-        <div id="sub-hosp" class="sub-g"><button class="sub-btn" onclick="setSub(this,'橋間診療所')">橋間</button><button class="sub-btn" onclick="setSub(this,'やぎ医院')">やぎ</button><button class="sub-btn" onclick="setSub(this,'岩田歯科')">岩田</button><button class="sub-btn" onclick="setSub(this,'暁明館病院')">暁明館</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
-        <div id="sub-drug" class="sub-g"><button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button><button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button><button class="sub-btn" onclick="setSub(this,'ココカラ')">ココカラ</button><button class="sub-btn" onclick="setSub(this,'アオキ')">アオキ</button><button class="sub-btn" onclick="setSub(this,'エバグリーン')">エバグリーン</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
-        <div id="sub-eat" class="sub-g"><button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button><button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button><button class="sub-btn" onclick="setSub(this,'しゃぶ葉')">しゃぶ葉</button><button class="sub-btn" onclick="setSub(this,'神楽坂さくら')">神楽坂さくら</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
+        <div id="sub-drug" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button>
+            <button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        </div>
+        <div id="sub-eat" class="sub-g">
+            <button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button>
+            <button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+        </div>
         <div id="sub-other" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セリア')">セリア</button><button class="sub-btn" onclick="setSub(this,'ニトリ')">ニトリ</button><button class="sub-btn" onclick="setSub(this,'カルディ')">カルディ</button><button class="sub-btn" onclick="setSub(this,'美容院')">美容院</button><button class="sub-btn" onclick="setSub(this,'無印良品')">無印</button><button class="sub-btn" onclick="setSub(this,'ローソン')">ローソン</button><button class="sub-btn" onclick="setSub(this,'ファミマ')">ファミマ</button><button class="sub-btn" onclick="setSub(this,'セブンイレブン')">セブイレ</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
+            <button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button>
+            <button class="sub-btn" onclick="setSub(this,'セブンイレブン')">セブイレ</button>
+            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
-        <input type="text" id="memoIn" placeholder="メモ（買ったものなど）">
+
+        <input type="text" id="storeIn" placeholder="店名">
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
-        <p><b>② レシートを撮る（任意）</b></p>
-        <input type="file" id="file" accept="image/*" capture="environment" style="display:none;">
-        <button type="button" class="cam-btn" onclick="document.getElementById('file').click()">📷 カメラを起動</button>
-        <img id="preview">
-        <button id="saveBtn" class="save-btn" onclick="doSave()">保存する</button>
-        <div id="loadText" style="display:none; text-align:center; font-weight:bold; color:var(--main-c); margin-top:10px;">送信中...🚀</div>
-        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× 閉じる</p>
+        <input type="text" id="memoIn" placeholder="備考（一番高いものなど）">
+        
+        <button id="saveBtn" class="save-btn" onclick="doSave()">確認して保存！</button>
+        <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× やめる</p>
     </div>
 </div>
+
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbw3Z6ev4wk5dD3ipUXFv5RA8fa_MIpBf8R3p9m2_mUrZM0Ab0EvTnqVoQoJTTgtFUNxmQ/exec";
     const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
     let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
+
     window.onload = loadData;
+
+    document.getElementById('fileIn').onchange = async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async f => {
+            base64Data = f.target.result;
+            document.getElementById('preview').src = base64Data;
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('camMsg').style.display = 'none';
+            analyzeImg(base64Data);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    async function analyzeImg(img) {
+        document.getElementById('loadText').style.display = 'block';
+        document.getElementById('saveBtn').disabled = true;
+        try {
+            const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ cmd: 'analyze', imgData: img }) });
+            const resJ = await res.json();
+            if(resJ.store) document.getElementById('storeIn').value = resJ.store;
+            if(resJ.amt) document.getElementById('amtIn').value = resJ.amt;
+            if(resJ.item) document.getElementById('memoIn').value = "★一番高い: " + resJ.item;
+        } catch (e) { console.error(e); }
+        document.getElementById('loadText').style.display = 'none';
+        document.getElementById('saveBtn').disabled = false;
+    }
+
+    async function doSave() {
+        const store = document.getElementById('storeIn').value || selSub;
+        const amt = document.getElementById('amtIn').value;
+        if(!store || !amt) return alert("店名と金額を入れてね");
+        
+        document.getElementById('saveBtn').innerText = "送信中...";
+        await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({
+            cmd: 'save', d: selD, c: store, a: Number(amt), m: document.getElementById('memoIn').value, imgData: base64Data, folderId: FOLDER_ID
+        })});
+        await loadData();
+        clsM();
+    }
+
+    async function doDel(idx) {
+        if(!confirm("消してもいい？")) return;
+        const t = data.filter(e => e.d === selD)[idx];
+        await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ cmd: 'delete', d: t.d, c: t.c, a: t.a, m: t.m }) });
+        await loadData(); opM(selD);
+    }
+
     async function loadData() {
         const res = await fetch(GAS_URL);
         data = await res.json();
-        data = data.map(i => {
-            let d = new Date(i.d); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-            return {...i, d: d.toISOString().split('T')[0], a: Number(i.a), m: i.m};
-        });
         draw();
     }
+
     function draw() {
         const y = viewD.getFullYear(), m = viewD.getMonth();
         document.getElementById('calT').innerText = `${y}年${m+1}月`;
@@ -95,67 +162,50 @@
         for(let i=0; i<start; i++) row += '<td></td>';
         for(let d=1; d<=end; d++) {
             const wi = (start+d-1)%7; if(wi===0 && d!==1) row += '</tr><tr>';
-            const cls = wi===0?'sun':(wi===6?'sat':'');
             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const sum = data.filter(e => e.d === ds).reduce((a, c) => a + c.a, 0);
-            row += `<td class="${cls}" onclick="opM('${ds}')"><span class="day-n">${d}</span><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
+            const sum = data.filter(e => {
+                const ed = new Date(e.d);
+                return `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}` === ds;
+            }).reduce((a, c) => a + Number(c.a), 0);
+            row += `<td onclick="opM('${ds}')"><span class="day-n">${d}</span><br><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
-        const ms = data.filter(e => e.d.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)).reduce((a,c)=>a+c.a,0);
-        document.getElementById('mSum').innerText = '¥'+ms.toLocaleString();
-        document.getElementById('ySum').innerText = '¥'+data.filter(e=>e.d.startsWith(y)).reduce((a,c)=>a+c.a,0).toLocaleString();
+        document.getElementById('mSum').innerText = '¥'+data.filter(e => new Date(e.d).getMonth() === m).reduce((a,c)=>a+Number(c.a),0).toLocaleString();
+        document.getElementById('ySum').innerText = '¥'+data.filter(e => new Date(e.d).getFullYear() === y).reduce((a,c)=>a+Number(c.a),0).toLocaleString();
     }
-    async function doSave() {
-        const a = document.getElementById('amtIn').value;
-        if(!selSub || !a) return alert('お店と金額を入れてね');
-        send({cmd:'save', d:selD, c:selSub, a:Number(a), m:document.getElementById('memoIn').value, imgData: base64Data, folderId: FOLDER_ID});
-    }
-    async function doDel(idx) {
-        if(!confirm("この記録を消してもいい？")) return;
-        const target = data.filter(e => e.d === selD)[idx];
-        send({cmd:'delete', d:target.d, c:target.c, a:target.a, m:target.m});
-    }
-    async function send(payload) {
-        document.getElementById('saveBtn').disabled = true; document.getElementById('loadText').style.display='block';
-        try {
-            await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload)});
-            setTimeout(async () => { await loadData(); clsM(); document.getElementById('saveBtn').disabled = false; document.getElementById('loadText').style.display='none'; }, 1000);
-        } catch(e) { alert("エラー"); document.getElementById('saveBtn').disabled = false; }
-    }
+
     function opM(d) {
         selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/');
-        const h = data.filter(e => e.d === d);
-        document.getElementById('dayH').innerHTML = h.map((e, i) => `<div class="hist-item"><span><b>${e.c}</b><br><small>${e.m||''}</small> ¥${e.a.toLocaleString()}</span><button class="del-btn" onclick="doDel(${i})">消す</button></div>`).join('') || "記録なし";
+        const h = data.filter(e => {
+            const ed = new Date(e.d);
+            return `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}` === d;
+        });
+        document.getElementById('dayH').innerHTML = h.map((e, i) => `<div class="hist-item"><span>${e.c} ¥${e.a.toLocaleString()}</span><button onclick="doDel(${i})">消す</button></div>`).join('') || "記録なし";
         document.getElementById('mdl').style.display='block';
     }
-    function showSub(t, b) { document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none'); document.querySelectorAll('.c-btn').forEach(x => x.classList.remove('on')); document.getElementById('sub-' + t).style.display = 'grid'; b.classList.add('on'); }
-    function setSub(b, n) { document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); selSub = n; }
-    function clsM() { document.getElementById('mdl').style.display='none'; selSub=''; base64Data = ""; document.getElementById('preview').style.display = 'none'; document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none'); document.querySelectorAll('.c-btn, .sub-btn').forEach(b=>b.classList.remove('on')); document.getElementById('amtIn').value=''; document.getElementById('memoIn').value=''; }
-    function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
 
-    document.getElementById('file').onchange = e => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = f => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 500;
-                const scale = maxWidth / img.width;
-                canvas.width = maxWidth;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                base64Data = canvas.toDataURL('image/jpeg', 0.4);
-                document.getElementById('preview').src = base64Data;
-                document.getElementById('preview').style.display = 'block';
-            };
-            img.src = f.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
+    function clsM() { 
+        document.getElementById('mdl').style.display='none'; 
+        document.getElementById('preview').style.display='none'; 
+        document.getElementById('camMsg').style.display='block';
+        document.getElementById('storeIn').value=''; document.getElementById('amtIn').value=''; document.getElementById('memoIn').value='';
+        base64Data = ""; document.getElementById('saveBtn').innerText = "確認して保存！";
+        document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
+        document.querySelectorAll('.c-btn').forEach(x => x.classList.remove('on'));
+    }
+
+    function showSub(t, b) { 
+        document.querySelectorAll('.sub-g').forEach(g => g.style.display = 'none');
+        document.querySelectorAll('.c-btn').forEach(x => x.classList.remove('on'));
+        document.getElementById('sub-' + t).style.display = 'grid'; b.classList.add('on'); 
+    }
+
+    function setSub(b, n) { 
+        document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on'));
+        b.classList.add('on'); selSub = n; document.getElementById('storeIn').value = n;
+    }
+
+    function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
 </script>
 </body>
 </html>
