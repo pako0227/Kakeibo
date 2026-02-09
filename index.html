@@ -17,8 +17,6 @@
         .day-amt { font-size: 0.65rem; color: var(--accent-c); font-weight: bold; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
-        
-        /* フォームのスタイル */
         .cam-area { text-align: center; background: #eee; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 2px dashed #ccc; }
         #preview { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
         input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 1.1rem; background: #fff; }
@@ -44,7 +42,6 @@
     <div class="modal-con">
         <h3 id="mdlD" style="text-align:center;"></h3>
         <div id="dayH"></div><hr>
-        
         <p><b>① レシートをパシャッ！</b></p>
         <div class="cam-area" onclick="document.getElementById('fileIn').click()">
             <span id="camMsg">📷 ここを押してカメラ起動</span>
@@ -52,7 +49,6 @@
             <img id="preview">
         </div>
         <div id="loadText" style="display:none;">解析中...（10秒くらい待ってね）</div>
-
         <p><b>② 内容を確認してね</b></p>
         <div class="btn-g">
             <button class="c-btn" onclick="showSub('super', this)">🛒 スーパー</button>
@@ -68,26 +64,13 @@
             <button class="sub-btn" onclick="setSub(this,'万代')">万代</button>
             <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
         </div>
-        <div id="sub-drug" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button>
-            <button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button>
-            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
-        </div>
-        <div id="sub-eat" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button>
-            <button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button>
-            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
-        </div>
-        <div id="sub-other" class="sub-g">
-            <button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button>
-            <button class="sub-btn" onclick="setSub(this,'セブンイレブン')">セブイレ</button>
-            <button class="sub-btn" onclick="setSub(this,'その他')">その他</button>
-        </div>
+        <div id="sub-drug" class="sub-g"><button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button><button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
+        <div id="sub-eat" class="sub-g"><button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button><button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
+        <div id="sub-other" class="sub-g"><button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セブンイレブン')">セブイレ</button><button class="sub-btn" onclick="setSub(this,'その他')">その他</button></div>
 
         <input type="text" id="storeIn" placeholder="店名">
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
-        <input type="text" id="memoIn" placeholder="備考（一番高いものなど）">
-        
+        <input type="text" id="memoIn" placeholder="備考">
         <button id="saveBtn" class="save-btn" onclick="doSave()">確認して保存！</button>
         <p onclick="clsM()" style="text-align:center; color:#888; margin-top:20px;">× やめる</p>
     </div>
@@ -96,7 +79,7 @@
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbw3Z6ev4wk5dD3ipUXFv5RA8fa_MIpBf8R3p9m2_mUrZM0Ab0EvTnqVoQoJTTgtFUNxmQ/exec";
     const FOLDER_ID = "1-Cerx23hxJFSeHpX385dhsJtolTD2IxA";
-    let data = [], viewD = new Date(), selD = '', selSub = '', base64Data = "";
+    let data = [], viewD = new Date(), selD = '', base64Data = "";
 
     window.onload = loadData;
 
@@ -129,10 +112,9 @@
     }
 
     async function doSave() {
-        const store = document.getElementById('storeIn').value || selSub;
+        const store = document.getElementById('storeIn').value;
         const amt = document.getElementById('amtIn').value;
         if(!store || !amt) return alert("店名と金額を入れてね");
-        
         document.getElementById('saveBtn').innerText = "送信中...";
         await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({
             cmd: 'save', d: selD, c: store, a: Number(amt), m: document.getElementById('memoIn').value, imgData: base64Data, folderId: FOLDER_ID
@@ -143,7 +125,8 @@
 
     async function doDel(idx) {
         if(!confirm("消してもいい？")) return;
-        const t = data.filter(e => e.d === selD)[idx];
+        const dayData = data.filter(e => fmtD(e.d) === selD);
+        const t = dayData[idx];
         await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ cmd: 'delete', d: t.d, c: t.c, a: t.a, m: t.m }) });
         await loadData(); opM(selD);
     }
@@ -152,6 +135,12 @@
         const res = await fetch(GAS_URL);
         data = await res.json();
         draw();
+    }
+
+    function fmtD(input) {
+        const d = new Date(input);
+        if (isNaN(d.getTime())) return "";
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function draw() {
@@ -163,24 +152,28 @@
         for(let d=1; d<=end; d++) {
             const wi = (start+d-1)%7; if(wi===0 && d!==1) row += '</tr><tr>';
             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const sum = data.filter(e => {
-                const ed = new Date(e.d);
-                return `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}` === ds;
-            }).reduce((a, c) => a + Number(c.a), 0);
+            // 数字だけを合計するように修正
+            const sum = data.filter(e => fmtD(e.d) === ds).reduce((a, c) => a + (Number(c.a) || 0), 0);
             row += `<td onclick="opM('${ds}')"><span class="day-n">${d}</span><br><span class="day-amt">${sum>0?'¥'+sum.toLocaleString():''}</span></td>`;
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
-        document.getElementById('mSum').innerText = '¥'+data.filter(e => new Date(e.d).getMonth() === m).reduce((a,c)=>a+Number(c.a),0).toLocaleString();
-        document.getElementById('ySum').innerText = '¥'+data.filter(e => new Date(e.d).getFullYear() === y).reduce((a,c)=>a+Number(c.a),0).toLocaleString();
+        
+        // 今月の合計（数字以外を飛ばす）
+        const curMSum = data.filter(e => {
+            const ed = new Date(e.d);
+            return ed.getFullYear() === y && ed.getMonth() === m;
+        }).reduce((a,c)=>a+(Number(c.a) || 0),0);
+        document.getElementById('mSum').innerText = '¥'+curMSum.toLocaleString();
+        
+        // 年間の合計（数字以外を飛ばす）
+        const curYSum = data.filter(e => new Date(e.d).getFullYear() === y).reduce((a,c)=>a+(Number(c.a) || 0),0);
+        document.getElementById('ySum').innerText = '¥'+curYSum.toLocaleString();
     }
 
     function opM(d) {
         selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/');
-        const h = data.filter(e => {
-            const ed = new Date(e.d);
-            return `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}` === d;
-        });
-        document.getElementById('dayH').innerHTML = h.map((e, i) => `<div class="hist-item"><span>${e.c} ¥${e.a.toLocaleString()}</span><button onclick="doDel(${i})">消す</button></div>`).join('') || "記録なし";
+        const h = data.filter(e => fmtD(e.d) === d);
+        document.getElementById('dayH').innerHTML = h.map((e, i) => `<div class="hist-item"><span>${e.c} ¥${(Number(e.a) || 0).toLocaleString()}</span><button onclick="doDel(${i})">消す</button></div>`).join('') || "記録なし";
         document.getElementById('mdl').style.display='block';
     }
 
@@ -202,7 +195,7 @@
 
     function setSub(b, n) { 
         document.querySelectorAll('.sub-btn').forEach(x => x.classList.remove('on'));
-        b.classList.add('on'); selSub = n; document.getElementById('storeIn').value = n;
+        b.classList.add('on'); document.getElementById('storeIn').value = n;
     }
 
     function moveM(n) { viewD.setMonth(viewD.getMonth() + n); draw(); }
