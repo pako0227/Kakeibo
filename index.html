@@ -22,6 +22,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
         .modal-con { background: white; margin: 5% auto; padding: 20px; width: 85%; border-radius: 25px; max-height: 85vh; overflow-y: auto; }
         .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 8px; }
+        .hist-item span { line-height: 1.3; }
         .del-btn { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
         .btn-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
         .c-btn { padding: 12px; border: 2px solid #eee; border-radius: 10px; background: #fff; font-size: 0.9rem; }
@@ -70,9 +71,11 @@
         </div>
         <div id="sub-hosp" class="sub-g"><button class="sub-btn" onclick="setSub(this,'橋間診療所')">橋間</button><button class="sub-btn" onclick="setSub(this,'やぎ医院')">やぎ</button><button class="sub-btn" onclick="setSub(this,'岩田歯科')">岩田</button><button class="sub-btn" onclick="setSub(this,'暁明館病院')">暁明館</button></div>
         <div id="sub-drug" class="sub-g"><button class="sub-btn" onclick="setSub(this,'スギ薬局')">スギ</button><button class="sub-btn" onclick="setSub(this,'コスモス')">コスモス</button><button class="sub-btn" onclick="setSub(this,'ココカラ')">ココカラ</button><button class="sub-btn" onclick="setSub(this,'エバグリーン')">エバグリーン</button></div>
+        <div id="sub-eat" class="sub-g"><button class="sub-btn" onclick="setSub(this,'海と窓')">海と窓</button><button class="sub-btn" onclick="setSub(this,'活魚寿司')">活魚</button><button class="sub-btn" onclick="setSub(this,'しゃぶ葉')">しゃぶ葉</button><button class="sub-btn" onclick="setSub(this,'神楽坂さくら')">神楽坂さくら</button></div>
+        <div id="sub-other" class="sub-g"><button class="sub-btn" onclick="setSub(this,'ダイソー')">ダイソー</button><button class="sub-btn" onclick="setSub(this,'セリア')">セリア</button><button class="sub-btn" onclick="setSub(this,'美容院')">美容院</button><button class="sub-btn" onclick="setSub(this,'ローソン')">ローソン</button><button class="sub-btn" onclick="setSub(this,'ファミマ')">ファミマ</button><button class="sub-btn" onclick="setSub(this,'セブイレ')">セブイレ</button></div>
 
         <input type="number" id="amtIn" inputmode="numeric" placeholder="￥ 金額">
-        <input type="text" id="memoIn" placeholder="備考・メモ">
+        <input type="text" id="memoIn" placeholder="備考・メモ（買ったものなど）">
 
         <button id="saveBtn" class="save-btn" onclick="doSave()">これで保存する</button>
         <div id="loadStatus" class="status-msg" style="color:var(--main-c);">送信中...🚀</div>
@@ -93,7 +96,7 @@
         data = raw.map(i => {
             let d = new Date(i.d);
             let ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            return {...i, d: ds, a: Number(i.a)||0, m: i.m};
+            return {...i, d: ds, a: Number(i.a)||0, m: i.m || ""};
         });
         draw();
     }
@@ -113,8 +116,8 @@
         }
         document.getElementById('calB').innerHTML = row + '</tr>';
         
-        const currentMSum = data.filter(e => e.d.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)).reduce((a,c)=>a+c.a,0);
-        document.getElementById('mSum').innerText = '¥'+currentMSum.toLocaleString();
+        const ms = data.filter(e => e.d.startsWith(`${y}-${String(m+1).padStart(2,'0')}`)).reduce((a,c)=>a+c.a,0);
+        document.getElementById('mSum').innerText = '¥'+ms.toLocaleString();
         document.getElementById('ySum').innerText = '¥'+data.filter(e=>e.d.startsWith(y)).reduce((a,c)=>a+c.a,0).toLocaleString();
     }
 
@@ -140,12 +143,16 @@
         await loadData(); opM(selD);
     }
 
+    // --- ここが履歴表示のメイン修正箇所です ---
     function opM(d) {
         selD = d; document.getElementById('mdlD').innerText = d.replace(/-/g, '/');
         const h = data.filter(e => e.d === d);
         document.getElementById('dayH').innerHTML = h.map((e, i) => `
             <div class="hist-item">
-                <span><b>${e.c}</b> ¥${Number(e.a).toLocaleString()}</span>
+                <span>
+                    <b>${e.c}</b> ¥${Number(e.a).toLocaleString()}<br>
+                    <small style="color:#666;">${e.m ? '📝 ' + e.m : ''}</small>
+                </span>
                 <button class="del-btn" onclick="doDel(${i})">消す</button>
             </div>`).join('') || "記録なし";
         document.getElementById('mdl').style.display='block';
